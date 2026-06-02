@@ -11,6 +11,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 - Release workflow now uses npm Trusted Publishing (OIDC) instead of a
   long-lived `NPM_TOKEN`. No bearer credentials live on the account or
   in GitHub secrets for routine publishes (#19).
+- Bump runner Node to 22 and force `npm install -g npm@latest` in
+  `release.yml` - npm CLI 11.5.1+ is required for tokenless OIDC
+  publishes; npm 10.x signs provenance but still demands a bearer
+  token for the PUT and 404s without one.
 - `NPM_SETUP.md` rewritten - Trusted Publishing is the documented
   primary path; token instructions demoted to a breakglass appendix.
 

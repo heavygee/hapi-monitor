@@ -2,8 +2,6 @@
   <img src="https://raw.githubusercontent.com/heavygee/hapi-monitor/main/docs/logo.png" alt="hapi-monitor" width="640">
 </p>
 
-<h1 align="center">hapi-monitor</h1>
-
 <p align="center"><b>htop</b> for <a href="https://github.com/tiann/hapi">HAPI</a> sessions.</p>
 
 <p align="center">

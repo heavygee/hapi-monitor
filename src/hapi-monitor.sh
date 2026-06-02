@@ -943,8 +943,16 @@ def render_header(now_str, builds, rows, selected_row=None):
     chart_w = max(CHART_MIN_W, W - LOGO_W - HEADER_GAP - panel_w - HEADER_GAP)
     row_count = max(len(logo_lines), len(panel_lines), HEADER_ROWS)
     chart_lines = render_agent_chart(chart_state, chart_w, row_count)
-    # Detail rows live UNDER the chart, indented to the chart's column.
-    detail_lines = render_detail_below_chart(selected_row, chart_w)
+    # When a row is selected the detail line (SID/AG/RUN) is short and aligns
+    # nicely under the chart column. When nothing is selected the detail line
+    # is the hotkey hint - too wide for the chart column, so we render it
+    # full-width at column 0 to avoid wrapping behind the panels.
+    if selected_row:
+        detail_lines = render_detail_below_chart(selected_row, chart_w)
+        full_width_help = None
+    else:
+        detail_lines = []
+        full_width_help = render_hotkey_hint()
 
     lines = ['']
     for i in range(row_count):
@@ -956,12 +964,16 @@ def render_header(now_str, builds, rows, selected_row=None):
         line = left + gap1 + mid + gap2 + chart
         tail = max(0, W - vis_len(line))
         lines.append(line + (' ' * tail))
-    # Append detail rows aligned under the chart column.
+    # SID/AG/RUN sits under the chart column (right side, indented).
     left_indent = ' ' * (LOGO_W + HEADER_GAP + panel_w + HEADER_GAP)
     for dl in detail_lines:
         line = left_indent + dl
         tail = max(0, W - vis_len(line))
         lines.append(line + (' ' * tail))
+    # Hotkey hint sits at column 0, full-width, so the long text never
+    # overflows the chart column and wraps onto the status row.
+    if full_width_help is not None:
+        lines.append(pad_line(full_width_help))
 
     sub = (
         f'  {online}  '
@@ -1331,30 +1343,38 @@ def render_agent_table(alert_rows, ok_rows, other_rows, cursor_sid=None):
     return lines
 
 
+def render_hotkey_hint():
+    """Full-width hotkey hint rendered at column 0 (not under the chart).
+
+    The hint string is ~67 chars wide - too long to share the chart column
+    with the panels above it. Lives on its own row at the left edge so it
+    never wraps onto the status bar.
+    """
+    toggle_word = 'hide' if show_inactive else 'show'
+    if not T.use:
+        return f' j/k ↑↓ select · TAB alert · g/G top/bot · i {toggle_word} inactive · q quit'
+    return (
+        f' {t.fg(87)}j/k{t.R} {t.fg(87)}↑↓{t.R}{t.fg(245)}{t.DIM} select{t.R} '
+        f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(213)}TAB{t.R}{t.fg(245)}{t.DIM} alert{t.R} '
+        f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(87)}g/G{t.R}{t.fg(245)}{t.DIM} top/bot{t.R} '
+        f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(87)}i{t.R}{t.fg(245)}{t.DIM} {toggle_word} inactive{t.R} '
+        f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(196)}q{t.R}{t.fg(245)}{t.DIM} quit{t.R}'
+    )
+
+
 def render_detail_below_chart(selected_row, chart_w):
     """Single-line readout that fits under the chart column.
 
     Project + flavor are redundant with the main table row (we render the
     selected row highlighted there), so we only surface the three IDs:
-    SID, AG, RUN. When nothing's selected, shows compact key hints.
+    SID, AG, RUN. Caller is responsible for checking selected_row is not
+    None before calling; the hotkey hint lives in render_hotkey_hint().
     """
     def fit(text):
         plain = ANSI_RE.sub('', text)
         if len(plain) >= chart_w:
             return text if T.use else text[:chart_w]
         return text + ' ' * (chart_w - len(plain))
-
-    if not selected_row:
-        toggle_word = 'hide' if show_inactive else 'show'
-        if not T.use:
-            return [fit(f' j/k ↑↓ select · TAB alert · g/G top/bot · i {toggle_word} inactive · q quit')]
-        return [fit(
-            f' {t.fg(87)}j/k{t.R} {t.fg(87)}↑↓{t.R}{t.fg(245)}{t.DIM} select{t.R} '
-            f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(213)}TAB{t.R}{t.fg(245)}{t.DIM} alert{t.R} '
-            f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(87)}g/G{t.R}{t.fg(245)}{t.DIM} top/bot{t.R} '
-            f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(87)}i{t.R}{t.fg(245)}{t.DIM} {toggle_word} inactive{t.R} '
-            f'{t.fg(245)}{t.DIM}·{t.R} {t.fg(196)}q{t.R}{t.fg(245)}{t.DIM} quit{t.R}'
-        )]
 
     r = selected_row
     aid = (r['agentSessionId'] or '—')[:8]

@@ -61,6 +61,8 @@ is auditable from the code itself.
 3. Cut a GitHub Release with the matching `CHANGELOG.md` section.
 
 **Environment `npm`** holds `NPM_TOKEN`. **No tag pushes until the env is configured.**
+See [`NPM_SETUP.md`](NPM_SETUP.md) for the one-time wiring procedure
+(token creation, env, secret, optional reviewer gate, dry-run, tag).
 
 ## Pages / docs site
 

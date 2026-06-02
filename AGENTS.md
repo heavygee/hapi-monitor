@@ -48,7 +48,8 @@ docs/                      Long-form supplementary docs (if any)
 - Renaming / removing existing CLI flags or env vars (back-compat breaks).
 - Adding runtime dependencies (currently zero pip / npm deps in the runtime
   bash entrypoint — that's a feature).
-- Touching `.github/workflows/release.yml` (it has npm publish credentials).
+- Touching `.github/workflows/release.yml` (it has npm publish credentials;
+  the operator-side env wiring lives in `NPM_SETUP.md`).
 - Switching the licence.
 - Major architectural changes (e.g. rewriting in Rust / Go / TypeScript).
 

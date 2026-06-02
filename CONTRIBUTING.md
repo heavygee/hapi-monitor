@@ -80,6 +80,13 @@ notes are generated from these.
   configured terminal width `W`, and the flicker-free `emit()` path
   (no `\033[2J`).
 
+## Cutting a release
+
+Maintainers only. See [`NPM_SETUP.md`](NPM_SETUP.md) for the one-time
+npm environment wiring, then the tag procedure (bump
+`package.json`, append a dated `CHANGELOG.md` entry, push `vX.Y.Z`,
+watch the `release` workflow run).
+
 ## Reporting security issues
 
 Please **don't** open public issues for security problems. See

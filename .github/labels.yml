@@ -1,54 +1,55 @@
 # Synced by .github/workflows/labels.yml using EndBug/label-sync.
 # Edit here, push to main, CI applies to the repo.
+# NOTE: colors are quoted because YAML parses values like `5319e7` as scientific notation.
 
 - name: bug
-  color: d73a4a
+  color: "d73a4a"
   description: Something isn't working
 - name: enhancement
-  color: a2eeef
+  color: "a2eeef"
   description: New feature or improvement
 - name: question
-  color: d876e3
+  color: "d876e3"
   description: Further information is requested
 - name: documentation
-  color: 0075ca
+  color: "0075ca"
   description: Improvements or additions to docs
 - name: good first issue
-  color: 7057ff
+  color: "7057ff"
   description: Approachable starter task
 - name: help wanted
-  color: 008672
+  color: "008672"
   description: Maintainers welcome external contribution
 - name: needs-triage
-  color: ededed
+  color: "ededed"
   description: Awaiting maintainer review
 - name: accepted
-  color: 0e8a16
+  color: "0e8a16"
   description: Triage complete, work can start
 - name: wontfix
-  color: ffffff
+  color: "ffffff"
   description: This will not be worked on
 - name: duplicate
-  color: cfd3d7
+  color: "cfd3d7"
   description: This issue or PR already exists
 - name: invalid
-  color: e4e669
+  color: "e4e669"
   description: This doesn't seem right
 - name: security
-  color: b60205
+  color: "b60205"
   description: Security-related issue (use SECURITY.md for vulns!)
 - name: dependencies
-  color: 0366d6
+  color: "0366d6"
   description: Pull requests that update a dependency file
 - name: ci
-  color: 5319e7
+  color: "5319e7"
   description: Continuous integration / release plumbing
 - name: chore
-  color: cccccc
+  color: "cccccc"
   description: Maintenance tasks
 - name: breaking-change
-  color: b60205
+  color: "b60205"
   description: Backwards-incompatible change
 - name: automerge
-  color: 0e8a16
+  color: "0e8a16"
   description: Auto-merge once CI is green (operator opt-in)

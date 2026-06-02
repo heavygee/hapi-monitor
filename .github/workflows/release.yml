@@ -29,10 +29,8 @@ jobs:
             echo "::error::tag $TAG_VERSION does not match package.json $PKG_VERSION"
             exit 1
           fi
-      - name: Publish to npm with provenance
+      - name: Publish to npm with provenance (Trusted Publishing / OIDC)
         run: npm publish --provenance --access public
-        env:
-          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
 
   github-release:
     name: GitHub release

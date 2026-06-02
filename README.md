@@ -23,6 +23,10 @@ for inactive sessions.
 
 ![hapi-monitor screenshot](https://raw.githubusercontent.com/heavygee/hapi-monitor/main/docs/screenshot.png)
 
+The screen is dense. **[docs/anatomy.md](docs/anatomy.md)** walks
+through every glyph, color, badge, and indicator line by line so a
+new operator can read the interface without guesswork.
+
 ## Why this exists
 
 HAPI ships with its own hub UI in the web app — this isn't a replacement for

@@ -1,0 +1,61 @@
+name: Feature request
+description: Suggest a new capability or improvement.
+title: "[feat]: "
+labels: ["enhancement", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        This tool is intentionally focused on terminal monitoring of a HAPI hub.
+        Out-of-scope requests (web dashboards, push notifications, multi-hub
+        federation, etc.) will likely be closed with `wontfix` — please describe
+        the *underlying need* so we can suggest alternatives if the feature
+        itself doesn't fit.
+  - type: textarea
+    id: problem
+    attributes:
+      label: What problem are you trying to solve?
+      description: Describe the operator pain point, not the proposed feature.
+      placeholder: |
+        I can't tell at a glance which of my agents has been stuck the longest;
+        the THINK column shows duration but they're sorted by recency.
+    validations:
+      required: true
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: |
+        How would the user experience change? Mock terminal output is welcome
+        and ASCII diagrams render fine.
+    validations:
+      required: true
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you considered
+      description: Why not just use a script, a different tool, an existing flag?
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Affects
+      multiple: true
+      options:
+        - Chart rendering
+        - Agent table
+        - Keyboard navigation
+        - Auth / settings
+        - CI / packaging
+        - Docs only
+        - Other
+    validations:
+      required: true
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched existing issues for similar requests.
+          required: true
+        - label: I've read the README and confirmed this isn't already possible.
+          required: true

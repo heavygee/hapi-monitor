@@ -1,0 +1,86 @@
+name: Bug report
+description: Something broken or behaving unexpectedly.
+title: "[bug]: "
+labels: ["bug", "needs-triage"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for taking the time to file a bug. Please include enough info that
+        a maintainer can reproduce without a back-and-forth.
+
+        **Security issue?** Don't file it here — see [SECURITY.md](https://github.com/heavygee/hapi-monitor/blob/main/SECURITY.md).
+  - type: input
+    id: version
+    attributes:
+      label: hapi-monitor version
+      description: Output of `hapi-monitor --version` or the commit SHA if running from source.
+      placeholder: "0.1.0"
+    validations:
+      required: true
+  - type: input
+    id: platform
+    attributes:
+      label: Platform
+      description: `uname -a` output is fine.
+      placeholder: "Linux proxmox 6.12.74+ x86_64"
+    validations:
+      required: true
+  - type: input
+    id: python
+    attributes:
+      label: Python version
+      description: Output of `python3 --version`.
+      placeholder: "Python 3.11.2"
+    validations:
+      required: true
+  - type: input
+    id: hub
+    attributes:
+      label: HAPI hub version (if known)
+      placeholder: "app 0.18.4 / cli 0.18.4"
+  - type: textarea
+    id: what-happened
+    attributes:
+      label: What happened
+      description: Describe the bug. Include exact commands you ran and the output you saw.
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: textarea
+    id: repro
+    attributes:
+      label: Minimal reproduction
+      description: |
+        Step-by-step. If the bug only shows up against a live hub, redact any
+        tokens / hostnames and note "live hub required".
+      placeholder: |
+        1. Run `hapi-monitor --watch`
+        2. Wait 5 seconds
+        3. Press `i`
+        4. Observe the crash / wrong output
+    validations:
+      required: true
+  - type: textarea
+    id: logs
+    attributes:
+      label: Relevant logs / terminal output
+      description: Paste here or attach. Strip JWTs and other secrets.
+      render: shell
+  - type: checkboxes
+    id: terms
+    attributes:
+      label: Pre-flight
+      options:
+        - label: I searched existing issues and didn't find a duplicate.
+          required: true
+        - label: I'm running a supported platform (Linux / macOS / WSL2).
+          required: true
+        - label: This is not a security issue (those go via SECURITY.md).
+          required: true

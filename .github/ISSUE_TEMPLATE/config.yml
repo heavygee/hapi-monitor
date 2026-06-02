@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Security vulnerability
+    url: https://github.com/heavygee/hapi-monitor/security/advisories/new
+    about: Report security issues privately — do NOT use public issues.
+  - name: Question / support
+    url: https://github.com/heavygee/hapi-monitor/issues/new?labels=question&template=bug_report.yml
+    about: Quick how-do-I question — use the bug template and add the `question` label.
+  - name: HAPI hub issues
+    url: https://github.com/tiann/hapi/issues
+    about: Issues with the upstream HAPI hub itself belong in tiann/hapi.

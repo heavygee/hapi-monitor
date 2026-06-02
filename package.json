@@ -1,0 +1,59 @@
+{
+  "name": "hapi-monitor",
+  "version": "0.1.0",
+  "description": "Terminal session monitor for HAPI hubs — nvtop-style chart, sticky-cursor agent table, BBS-flavored TUI.",
+  "keywords": [
+    "hapi",
+    "monitor",
+    "tui",
+    "terminal",
+    "ncurses",
+    "nvtop",
+    "agents",
+    "ai-agents",
+    "session-monitor",
+    "developer-tools"
+  ],
+  "homepage": "https://github.com/heavygee/hapi-monitor#readme",
+  "bugs": {
+    "url": "https://github.com/heavygee/hapi-monitor/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/heavygee/hapi-monitor.git"
+  },
+  "license": "MIT",
+  "author": "heavygee",
+  "type": "commonjs",
+  "main": "bin/hapi-monitor.js",
+  "bin": {
+    "hapi-monitor": "bin/hapi-monitor.js"
+  },
+  "files": [
+    "bin/",
+    "src/hapi-monitor.sh",
+    "src/plotter/hapi-sessions-plot.c",
+    "scripts/build-plotter.sh",
+    "LICENSE",
+    "README.md",
+    "CHANGELOG.md"
+  ],
+  "preferGlobal": true,
+  "engines": {
+    "node": ">=14"
+  },
+  "os": [
+    "linux",
+    "darwin"
+  ],
+  "scripts": {
+    "lint:sh": "shellcheck src/hapi-monitor.sh scripts/build-plotter.sh",
+    "lint:py": "python3 -m py_compile <(awk '/^PY$/{flag=!flag;next}flag' src/hapi-monitor.sh)",
+    "build:plotter": "bash scripts/build-plotter.sh",
+    "test": "bash test/smoke.sh",
+    "start": "node bin/hapi-monitor.js --watch"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

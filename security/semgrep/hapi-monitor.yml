@@ -1,0 +1,32 @@
+rules:
+  - id: bash-eval-on-untrusted-input
+    languages: [bash]
+    severity: ERROR
+    message: >
+      Avoid `eval` on dynamic input — the operator's hub URL, JWT, or settings
+      file should never reach `eval`. Use direct command invocation.
+    pattern: eval $...ARG
+
+  - id: python-shell-true-with-format
+    languages: [python]
+    severity: ERROR
+    message: >
+      `subprocess.* shell=True` with an f-string or `.format` is the classic
+      command-injection footgun. Pass a list of args without `shell=True`.
+    patterns:
+      - pattern-either:
+          - pattern: subprocess.run(f"...", ..., shell=True, ...)
+          - pattern: subprocess.check_output(f"...", ..., shell=True, ...)
+          - pattern: subprocess.Popen(f"...", ..., shell=True, ...)
+          - pattern: subprocess.call(f"...", ..., shell=True, ...)
+
+  - id: log-jwt-or-token
+    languages: [python, javascript, bash]
+    severity: WARNING
+    message: >
+      Don't log the hub JWT or cliApiToken. If you need to surface auth state,
+      log the truncated last 4 chars at most.
+    pattern-either:
+      - pattern-regex: 'print\([^)]*(jwt|token|cliApiToken)[^)]*\)'
+      - pattern-regex: 'console\.log\([^)]*(jwt|token|cliApiToken)[^)]*\)'
+      - pattern-regex: 'echo[^|]*(\$HAPI_JWT|\$jwt|\$token)'

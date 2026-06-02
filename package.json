@@ -48,7 +48,7 @@
   ],
   "scripts": {
     "lint:sh": "shellcheck src/hapi-monitor.sh scripts/build-plotter.sh",
-    "lint:py": "python3 -m py_compile <(awk '/^PY$/{flag=!flag;next}flag' src/hapi-monitor.sh)",
+    "lint:py": "bash scripts/lint-py.sh",
     "build:plotter": "bash scripts/build-plotter.sh",
     "test": "bash test/smoke.sh",
     "start": "node bin/hapi-monitor.js --watch"

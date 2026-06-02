@@ -38,21 +38,7 @@ jobs:
         with:
           python-version: "3.11"
       - name: Extract embedded Python and syntax-check
-        run: |
-          # Pull the heredoc body between `<<'PY'` and the closing `PY` terminator.
-          awk '
-            /<<.PY.$/   { inside=1; next }
-            inside && /^PY$/ { inside=0; next }
-            inside     { print }
-          ' src/hapi-monitor.sh > /tmp/embedded.py
-          lines=$(wc -l < /tmp/embedded.py)
-          if [[ "$lines" -lt 100 ]]; then
-            echo "::error::extracted Python looks too small ($lines lines) — heredoc markers may have moved"
-            head -20 /tmp/embedded.py
-            exit 1
-          fi
-          python3 -m py_compile /tmp/embedded.py
-          echo "embedded Python parses cleanly ($lines lines)"
+        run: bash scripts/lint-py.sh
 
   build-plotter:
     name: build-plotter

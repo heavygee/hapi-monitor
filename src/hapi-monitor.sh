@@ -1308,8 +1308,10 @@ def render_agent_table(alert_rows, ok_rows, other_rows, cursor_sid=None):
     # off-screen (visible as a 1Hz flicker on the watch tick). See #8.
     total_budget = idle_display_budget(len(alert_rows))
     if other_rows:
-        # Reserve chrome for the INACTIVE section (blank line + header + rule).
-        total_budget = max(4, total_budget - 3)
+        # Reserve chrome for the INACTIVE section: blank + header + rule + "+N below"
+        # indicator (-4 in total). Missing the indicator line is what made the frame
+        # exceed term_h by one and lose the trailing Σ hint to truncation.
+        total_budget = max(4, total_budget - 4)
     if ok_rows and other_rows:
         # Split: at least 3 rows for each section, otherwise proportional to
         # row counts so a giant inactive list does not starve idle.
@@ -2003,25 +2005,32 @@ def render_error_frame(err, attempt, tick_sec):
 
 
 def emit(text):
-    """Print once, or redraw in-place during --watch (no flicker).
+    """Print once, or redraw in-place during --watch (no flicker, no bounce).
 
     Flicker comes from clearing the screen then drawing. Instead we:
     1. Wrap the frame in DEC synchronized-update sequences (no half-frames on
        terminals that grok them — iTerm2, Kitty, Konsole, tmux 3.4+).
     2. Move cursor home (not clear).
-    3. Each line gets \\033[K (erase to EOL) so leftovers from the prior frame
+    3. Pad or truncate to exactly the viewport height so the terminal NEVER
+       scrolls (#12). Variable frame heights used to oscillate by 1-2 lines
+       as `+N below` indicators came and went, causing the header to bounce
+       on every refresh tick.
+    4. Each line gets \\033[K (erase to EOL) so leftovers from the prior frame
        on the same row get wiped without a blank flash.
-    4. \\033[J at the end wipes any rows below a now-shorter frame.
     """
     if watch_mode and watch_redraw:
         lines = text.split('\n')
+        term_h = shutil.get_terminal_size((80, 24)).lines
+        if len(lines) < term_h:
+            lines.extend([''] * (term_h - len(lines)))
+        elif len(lines) > term_h:
+            lines = lines[:term_h]
         parts = ['\033[?2026h', '\033[H']
         for i, ln in enumerate(lines):
             parts.append(ln)
             parts.append('\033[K')
             if i < len(lines) - 1:
                 parts.append('\n')
-        parts.append('\033[J')
         parts.append('\033[?2026l')
         sys.stdout.write(''.join(parts))
     else:

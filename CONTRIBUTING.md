@@ -49,6 +49,13 @@ anything beyond `--help`.
 CI runs the same checks (lint + smoke + gitleaks + semgrep). PRs can't
 merge to `main` until the aggregate `ci` job is green.
 
+To run the Semgrep OWASP gate locally before pushing (recommended for
+larger changes):
+
+```bash
+bash scripts/owasp-gate.sh   # uses Docker pinned image if available, falls back to local semgrep
+```
+
 ## Conventional commits
 
 PR titles and merge commits follow [Conventional Commits](https://www.conventionalcommits.org/):

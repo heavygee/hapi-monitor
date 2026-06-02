@@ -314,31 +314,25 @@ def render_legend():
     return '  '.join(parts)
 
 def render_list_hint(n_rows, all_rows=None, hidden_inactive=0):
-    """Explain long lists — no pagination, terminal scrolls.
+    """Explain the bottom-region row count + toggle state.
 
     `n_rows` is what's currently visible. `hidden_inactive` is the count of
     INACTIVE sessions filtered out by the toggle; surfaced so the operator
     knows there's more behind the curtain and how to reveal it.
+
+    The table itself paginates within the viewport (j/k to scroll) - we do
+    NOT promise "no pagination" here. See render_agent_table for the
+    windowing logic.
     """
-    card_h = 5 if os.environ.get('HAPI_HEALTH_LEGACY_CARDS') == '1' else 2
-    alert_count = sum(1 for r in (all_rows or []) if r['status'] in ('STUCK?', 'ZOMBIE', 'WORKING'))
-    est_lines = 12 + n_rows + card_h * alert_count
-    term_h = shutil.get_terminal_size((40, 24)).lines
-    needs_scroll = n_rows > 15 or est_lines > max(term_h - 2, 20)
     total_label = f'{n_rows} sessions'
     if hidden_inactive > 0:
         total_label = f'{n_rows} shown · +{hidden_inactive} inactive hidden'
     elif show_inactive and any(r['status'] == 'INACTIVE' for r in (all_rows or [])):
         total_label = f'{n_rows} sessions (incl inactive)'
     if not T.use:
-        tail = 'scroll if needed' if needs_scroll else 'fits viewport'
         toggle = ' · i hide inactive' if show_inactive else ' · i show inactive'
-        return f'{total_label} · {tail} · no pagination · hub {hub_public}{toggle if watch_mode else ""}'
-    hint = f'{t.fg(245)}{t.DIM}Σ {total_label}'
-    if needs_scroll:
-        hint += f' · {t.fg(220)}scroll for more{t.R}{t.fg(245)}{t.DIM} · no pagination'
-    else:
-        hint += ' · fits viewport · no pagination'
+        return f'{total_label} · j/k to scroll · hub {hub_public}{toggle if watch_mode else ""}'
+    hint = f'{t.fg(245)}{t.DIM}Σ {total_label} · j/k to scroll'
     if watch_mode:
         hint += f'{t.R}  {t.fg(87)}i{t.R}{t.fg(245)}{t.DIM} {"hide" if show_inactive else "show"} inactive{t.R}'
     else:
@@ -1308,6 +1302,32 @@ def render_agent_table(alert_rows, ok_rows, other_rows, cursor_sid=None):
         for r in alert_rows:
             lines.append(render_table_row(r, selected=(r['sid'] == cursor_sid)))
 
+    # Bottom region (idle + inactive) shares one row budget so it always fits
+    # the viewport. INACTIVE used to be appended unconditionally, which blew
+    # past terminal height and made the next emit() cycle scroll the header
+    # off-screen (visible as a 1Hz flicker on the watch tick). See #8.
+    total_budget = idle_display_budget(len(alert_rows))
+    if other_rows:
+        # Reserve chrome for the INACTIVE section (blank line + header + rule).
+        total_budget = max(4, total_budget - 3)
+    if ok_rows and other_rows:
+        # Split: at least 3 rows for each section, otherwise proportional to
+        # row counts so a giant inactive list does not starve idle.
+        denom = max(1, len(ok_rows) + len(other_rows))
+        prop = max(3, min(len(ok_rows), (total_budget * len(ok_rows)) // denom))
+        ok_budget = min(len(ok_rows), max(3, prop))
+        inactive_budget = max(3, total_budget - ok_budget)
+        # If one side has fewer rows than its share, donate the slack.
+        if inactive_budget > len(other_rows):
+            ok_budget = min(len(ok_rows), ok_budget + (inactive_budget - len(other_rows)))
+            inactive_budget = len(other_rows)
+        if ok_budget > len(ok_rows):
+            inactive_budget = min(len(other_rows), inactive_budget + (ok_budget - len(ok_rows)))
+            ok_budget = len(ok_rows)
+    else:
+        ok_budget = total_budget if ok_rows else 0
+        inactive_budget = total_budget if other_rows and not ok_rows else 0
+
     if ok_rows:
         hdr = f'{t.fg(46)}{t.B} ✓ IDLE & READY ({len(ok_rows)}) {t.R}' if T.use else f'IDLE & READY ({len(ok_rows)})'
         lines.append('')
@@ -1316,9 +1336,7 @@ def render_agent_table(alert_rows, ok_rows, other_rows, cursor_sid=None):
             lines.append(render_table_header())
         if T.use:
             lines.append(f' {t.fg(245)}{t.DIM}{"─" * (W - 2)}{t.R}')
-        budget = idle_display_budget(len(alert_rows))
-        # If cursor is on an idle row beyond budget, slide the window so it shows.
-        max_rows = min(len(ok_rows), budget)
+        max_rows = min(len(ok_rows), ok_budget)
         start = 0
         if cursor_sid:
             for i, r in enumerate(ok_rows):
@@ -1337,8 +1355,32 @@ def render_agent_table(alert_rows, ok_rows, other_rows, cursor_sid=None):
             msg = f'… +{hidden} idle below (HAPI_HEALTH_IDLE_MAX to raise cap)'
             lines.append(pad_line(f' {t.fg(245)}{t.DIM}{msg}{t.R}' if T.use else f'  {msg}'))
 
-    for r in other_rows:
-        lines.append(render_table_row(r, selected=(r['sid'] == cursor_sid)))
+    if other_rows:
+        hdr = f'{t.fg(245)}{t.DIM} ○ INACTIVE ({len(other_rows)}){t.R}' if T.use else f'INACTIVE ({len(other_rows)})'
+        lines.append('')
+        lines.append(pad_line(hdr))
+        if not alert_rows and not ok_rows:
+            lines.append(render_table_header())
+        if T.use:
+            lines.append(f' {t.fg(245)}{t.DIM}{"─" * (W - 2)}{t.R}')
+        max_rows = min(len(other_rows), inactive_budget)
+        start = 0
+        if cursor_sid:
+            for i, r in enumerate(other_rows):
+                if r['sid'] == cursor_sid:
+                    if i >= max_rows:
+                        start = i - max_rows + 1
+                    break
+        window = other_rows[start:start + max_rows]
+        if start > 0:
+            msg = f'… +{start} inactive above'
+            lines.append(pad_line(f' {t.fg(245)}{t.DIM}{msg}{t.R}' if T.use else f'  {msg}'))
+        for r in window:
+            lines.append(render_table_row(r, selected=(r['sid'] == cursor_sid)))
+        hidden = len(other_rows) - (start + len(window))
+        if hidden > 0:
+            msg = f'… +{hidden} inactive below'
+            lines.append(pad_line(f' {t.fg(245)}{t.DIM}{msg}{t.R}' if T.use else f'  {msg}'))
 
     return lines
 

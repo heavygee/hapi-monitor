@@ -5,6 +5,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Fixed
+- ATTENTION REQUIRED rows no longer reshuffle when agents transition
+  between think cycles. Previously sorted by `thinkingAt`, which jumped
+  every time an agent finished one thought and started another, making
+  multi-line marquee notes basically unreadable on busy hubs. Now uses
+  a stable first-seen queue: new attention rows append at the bottom,
+  status transitions (WORKING→STUCK?, etc.) keep the row in place
+  (only the badge changes), and rows leaving attention close the gap.
+  Idle/inactive sort (alpha by project) unchanged (#23).
+
 ### Added
 - Golden-frame TUI snapshot tests (`test/render-snapshot.sh`,
   `test/fixtures/*.json`, `test/snapshots/*.txt`) covering five

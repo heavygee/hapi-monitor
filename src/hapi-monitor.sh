@@ -1903,6 +1903,22 @@ def _fetch_detail(item):
 
 _STATUS_ORDER = {'STUCK?': 0, 'ZOMBIE': 1, 'WORKING': 2, 'OK': 3, 'INACTIVE': 4}
 
+# Stable first-seen queue for attention rows. See gather_rows() for full
+# rationale (#23). Persists across ticks within a single watch session.
+_ATTN_ORDER = {}
+_ATTN_NEXT = [0]  # list-of-one so the closure can mutate without `global`.
+
+def _attn_queue_position(sid):
+    if sid not in _ATTN_ORDER:
+        _ATTN_ORDER[sid] = _ATTN_NEXT[0]
+        _ATTN_NEXT[0] += 1
+    return _ATTN_ORDER[sid]
+
+def _attn_queue_prune(current_sids):
+    for sid in list(_ATTN_ORDER):
+        if sid not in current_sids:
+            del _ATTN_ORDER[sid]
+
 
 def gather_rows():
     """Build the (sorted) row list for one tick. Re-callable from the watch loop."""
@@ -1959,18 +1975,30 @@ def gather_rows():
             'recencyAt': recency_at,
             'updatedAt': updated_at,
         })
-    # Nothing tick-derived is allowed in the sort key — CPU/RAM/recency all
-    # jitter once per second and the list would reshuffle for no reason.
-    # Active rows (WORKING/STUCK?/ZOMBIE): order by thinkingAt ASC so the
-    # longest-running thought floats to top (most likely candidate to go
-    # STUCK). thinkingAt is set once per think cycle and stays constant
-    # until the agent transitions out, so the order only changes when an
-    # agent actually starts or stops thinking.
-    # Idle / inactive: stable alpha by project → flavor → sid.
+    # Attention rows (WORKING/STUCK?/ZOMBIE) use a stable first-seen queue:
+    # the first time a sid shows up in any attention status, it gets the
+    # next slot in _ATTN_ORDER and stays there for the rest of its life in
+    # this watch session. Status transitions (WORKING→STUCK?, etc.) do NOT
+    # reshuffle - the badge tells you the type, the row position stays put.
+    # This protects marquee note readability: if you're reading row 3, it
+    # stays row 3 until that agent leaves attention entirely. Old code
+    # sorted by thinkingAt, which reshuffled every think-cycle transition
+    # and made multi-line notes basically unreadable in busy hubs (#23).
+    # Idle / inactive: stable alpha by project → flavor → sid (unchanged).
+    for r in out_rows:
+        if r['status'] in ('WORKING', 'STUCK?', 'ZOMBIE'):
+            _attn_queue_position(r['sid'])
+    # Drop entries from the queue for sids that aren't currently in any
+    # attention status. If they re-enter later they get a fresh slot at
+    # the bottom (joined order, not their old position).
+    _attn_queue_prune({r['sid'] for r in out_rows if r['status'] in ('WORKING', 'STUCK?', 'ZOMBIE')})
     def _sort_key(r):
         status_rank = _STATUS_ORDER.get(r['status'], 9)
         if r['status'] in ('WORKING', 'STUCK?', 'ZOMBIE'):
-            return (status_rank, r.get('thinkingAt') or 0, r['sid'])
+            # Single attention bucket, queue-ordered. Status_rank intentionally
+            # NOT part of the key here - a WORKING→STUCK? transition must not
+            # move the row up the screen.
+            return (1, _attn_queue_position(r['sid']))
         return (status_rank, r['project'], r['flavor'], r['sid'])
     out_rows.sort(key=_sort_key)
     return out_rows

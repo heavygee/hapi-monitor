@@ -1,6 +1,6 @@
 {
   "name": "hapi-monitor",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Terminal session monitor for HAPI hubs — nvtop-style chart, sticky-cursor agent table, BBS-flavored TUI.",
   "keywords": [
     "hapi",

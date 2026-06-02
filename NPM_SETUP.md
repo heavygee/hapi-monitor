@@ -1,60 +1,32 @@
 # NPM_SETUP.md
 
-How to wire `heavygee/hapi-monitor` for its first `v*` tag → npm publish.
+How to wire `heavygee/hapi-monitor` for `v*` tag → npm publish.
 
 `.github/workflows/release.yml` runs on tag `v*`, verifies
 `package.json.version` matches the tag, then runs
 `npm publish --provenance --access public` inside a GitHub Environment
-called `npm` that is expected to hold one secret: `NPM_TOKEN`.
+called `npm`.
 
-If that environment doesn't exist yet, the workflow will fail with
-`Error: Input required and not supplied: NODE_AUTH_TOKEN` or it will
-publish nothing because the env gate blocks the job. Configure once,
-then forget.
+**Primary path: Trusted Publishing (OIDC)** - no long-lived token,
+GitHub Actions proves identity to npm at publish time. This is what
+the workflow uses by default and what npm explicitly recommends for
+CI/CD. The legacy token path is documented as a breakglass fallback
+at the bottom.
 
 ## Pre-flight checks (do these first)
 
 | Check | Command | Pass condition |
 |---|---|---|
-| Name is free on npm | `npm view hapi-monitor` | `404 Not Found` (or you already own it) |
 | Tree is clean | `git status` | "nothing to commit" |
 | CI is green on `main` | `gh run list -L 1 -w ci` | `success` |
 | Local build works | `npm run build:plotter && npm test` | both exit 0 |
 | Dry-run pack looks right | `npm pack --dry-run` | only files listed in `package.json#files` |
+| Version was bumped | `node -p "require('./package.json').version"` | matches the tag you're about to push |
 
-If `npm view hapi-monitor` returns metadata you don't recognise, the name
-is taken — pick a scoped name (`@heavygee/hapi-monitor`) and update
-`package.json#name` plus the badges in `README.md` before continuing.
-
-## Step 1 - Create a Granular Access Token on npm
-
-1. Log in to <https://www.npmjs.com>. Enable 2FA if you haven't (Auth
-   Only or Auth + Writes — the token still works with either).
-2. <https://www.npmjs.com/settings/~/tokens> → **Generate New Token →
-   Granular Access Token**.
-3. Fill in:
-
-   | Field | Value |
-   |---|---|
-   | Token name | `hapi-monitor-ci` |
-   | Description | `GitHub Actions release.yml — publish only` |
-   | Expiration | 90 days (or your policy max — never "no expiry") |
-   | Allowed IP ranges | leave blank (GitHub-hosted runners use a wide pool) |
-   | Permissions → Packages and scopes | `Read and write` |
-   | Packages and scopes → Only select packages | `hapi-monitor` (or `@heavygee/hapi-monitor` if scoped) |
-   | Permissions → Organizations | `No access` |
-
-4. Copy the token. It starts with `npm_`. You will not see it again.
-
-Do **not** use a Classic Automation Token unless you have a reason —
-granular tokens are scoped to a single package and can't accidentally
-publish anything else if leaked.
-
-## Step 2 - Create the `npm` environment on GitHub
+## Step 1 - Create the `npm` environment on GitHub
 
 The workflow targets `environment: name: npm`. If the environment is
-absent, the job hangs in "Waiting for review" or fails with a missing
-secret. Create it explicitly:
+absent, the job hangs or fails. Create it once:
 
 ```bash
 OWNER=heavygee REPO=hapi-monitor
@@ -73,12 +45,12 @@ gh api -X POST "repos/$OWNER/$REPO/environments/npm/deployment-branch-policies" 
   -f name='v*' -f type='tag'
 ```
 
-Result: only refs matching the tag pattern `v*` can deploy to `npm`. A
-random branch push can never trigger a publish even if someone bypasses
-the workflow trigger.
+Only refs matching `v*` can deploy to `npm`. A random branch push can
+never trigger a publish even if the workflow trigger were bypassed.
 
-**Recommended (manual gate):** add yourself as a required reviewer so
-every publish needs a one-click approval in the Actions UI:
+**Optional manual gate:** add yourself as a required reviewer so every
+publish needs a one-click approval in the Actions UI. Useful as a
+"stop the bleeding" switch if anything ever goes sideways:
 
 ```bash
 USER_ID=$(gh api users/heavygee --jq .id)
@@ -94,63 +66,74 @@ gh api -X PUT "repos/$OWNER/$REPO/environments/npm" --input - <<EOF
 EOF
 ```
 
-For a solo-maintainer public OSS package the reviewer step is overkill
-for routine bumps but very useful as a "stop the bleeding" switch if
-credentials ever leak. Decide once, document it here.
+## Step 2 - Configure npm Trusted Publisher
 
-## Step 3 - Add `NPM_TOKEN` to the environment
+This is the single security-critical step. Once configured, npm only
+accepts publishes that come from this exact GitHub repo + workflow +
+environment combo, regardless of which tokens may exist on the account.
 
-```bash
-gh secret set NPM_TOKEN \
-  --repo "$OWNER/$REPO" \
-  --env npm \
-  --body "npm_xxx_paste_token_here_xxx"
-```
+1. Sign in to <https://www.npmjs.com>.
+2. Browse to <https://www.npmjs.com/package/hapi-monitor/access> →
+   **Trusted Publishers** → **Add Trusted Publisher** → **GitHub Actions**.
+3. Fill in:
 
-Or via the UI: Settings → Environments → `npm` → Add secret →
-`NPM_TOKEN`.
+   | Field | Value |
+   |---|---|
+   | Organization or user | `heavygee` |
+   | Repository | `hapi-monitor` |
+   | Workflow filename | `release.yml` |
+   | Environment | `npm` |
 
-Verify:
+4. Save. No token is generated or copied - npm just records the OIDC
+   issuer it will accept.
 
-```bash
-gh api "repos/$OWNER/$REPO/environments/npm/secrets" --jq '.secrets[].name'
-# expected: NPM_TOKEN
-```
+**First-publish chicken-and-egg:** npm's trusted-publisher form only
+appears once the package exists. For a brand-new unpublished package,
+do the first publish with a short-lived token (Appendix A), then
+configure Trusted Publishing and remove the token. After that all
+subsequent publishes are tokenless.
 
-The repo-level `Secrets` page should **not** contain an `NPM_TOKEN`
-shadow copy — keep it environment-scoped so the gate is meaningful.
+## Step 3 - Verify the workflow is OIDC-ready
 
-## Step 4 - Link the npm package to this repo (provenance attestation)
+`.github/workflows/release.yml` should have:
 
-`--provenance` only works if the package's npm registry record says it
-was published from this exact GitHub repo. For the **first** publish the
-link is established automatically by the OIDC attestation. For
-subsequent publishes, npm verifies the linkage from
-`package.json#repository.url` — already set:
+- `permissions.id-token: write` (lets the runner mint an OIDC token)
+- `actions/setup-node` with `registry-url: https://registry.npmjs.org/`
+- `npm publish --provenance --access public` with **no** `NODE_AUTH_TOKEN`
+
+The npm CLI (10.6+) auto-detects OIDC when those three conditions are
+met and exchanges the OIDC token for a short-lived publish credential.
+You don't have to do anything special in the workflow YAML.
+
+## Step 4 - Confirm `package.json#repository.url`
+
+Provenance attestation verifies the package came from this exact repo.
+The `repository.url` in `package.json` is the source of truth for that
+check:
 
 ```json
 "repository": { "type": "git", "url": "git+https://github.com/heavygee/hapi-monitor.git" }
 ```
 
-No further action. If you ever rename the GitHub repo or fork it, update
-`repository.url` **before** the next tag or `--provenance` will fail.
+If you ever rename the GitHub repo or fork it, update `repository.url`
+**before** the next tag or `--provenance` will fail.
 
-## Step 5 - Cut `v0.1.0`
+## Step 5 - Cut a release
 
 ```bash
 git switch main
 git pull --ff-only
 
-# Bump version + write CHANGELOG entry first (header MUST contain the version)
-$EDITOR package.json   # "version": "0.1.0"
-$EDITOR CHANGELOG.md   # ## 0.1.0 - YYYY-MM-DD
+# Bump version + write CHANGELOG entry (header must contain the version)
+$EDITOR package.json   # "version": "0.1.x"
+$EDITOR CHANGELOG.md   # ## 0.1.x - YYYY-MM-DD
 
 git add package.json CHANGELOG.md
-git commit -m "chore(release): v0.1.0"
+git commit -m "chore(release): v0.1.x"
 git push origin main
 
-git tag -a v0.1.0 -m "v0.1.0"
-git push origin v0.1.0
+git tag -a v0.1.x -m "v0.1.x"
+git push origin v0.1.x
 ```
 
 Then watch the run:
@@ -159,57 +142,74 @@ Then watch the run:
 gh run watch -R "$OWNER/$REPO"
 ```
 
-If you added a reviewer to the env (Step 2 optional), the job pauses
-until you approve in the Actions UI.
-
 ## Step 6 - Verify the publish
 
 ```bash
-npm view hapi-monitor
-npm view hapi-monitor dist.attestations    # provenance present?
+npm view hapi-monitor                        # latest dist-tag should match
+npm view hapi-monitor dist.attestations      # provenance present
 ```
 
-The npm page (`https://www.npmjs.com/package/hapi-monitor`) should show
+The npm page (<https://www.npmjs.com/package/hapi-monitor>) should show
 a green "Provenance" badge linking back to the GitHub Actions run.
-
-## Rotating the token
-
-Granular tokens expire. Add a calendar reminder for `now + 75 days` (15
-days of headroom). Rotation flow:
-
-1. Generate replacement token (Step 1).
-2. `gh secret set NPM_TOKEN --repo $OWNER/$REPO --env npm --body "..."`
-3. Revoke the old token on npm.
-4. Trigger a no-op tag push (`v0.x.y+1`) only if you want to verify —
-   not required.
-
-## Optional upgrade - Trusted Publishers (no token at all)
-
-npm now supports OIDC-only publishing (Trusted Publishers, GA late
-2025). When ready:
-
-1. <https://www.npmjs.com/package/hapi-monitor/access> → Trusted
-   Publishers → Add → GitHub Actions.
-2. Repo: `heavygee/hapi-monitor`. Workflow: `release.yml`. Environment:
-   `npm`.
-3. Remove `NPM_TOKEN` secret from the env and delete the
-   `NODE_AUTH_TOKEN` line from `release.yml`. The OIDC token from
-   `id-token: write` (already in the workflow) is sufficient.
-
-Defer this until after `v0.1.0` ships. Token path works today and
-matches the rest of our org.
 
 ## Things that go wrong
 
 | Symptom | Cause | Fix |
 |---|---|---|
-| `Error: Input required and not supplied: NODE_AUTH_TOKEN` | `NPM_TOKEN` missing from env or stored at repo level instead | Re-run Step 3 with `--env npm` |
-| `npm error code E403 - 403 Forbidden - You do not have permission` | Granular token scoped to a different package than the one you're publishing | Regenerate token with the right package in the allow-list |
-| `npm error 404 Not Found - PUT https://registry.npmjs.org/hapi-monitor` | First publish but `access` isn't `public` for a scoped name | Already handled - `publishConfig.access` is `public` in `package.json` |
-| `tag v0.1.0 does not match package.json 0.0.x` | Forgot to bump `package.json` before tagging | Delete tag (`git tag -d v0.1.0 && git push --delete origin v0.1.0`), bump, retag |
+| `Error: Trusted Publisher not configured` | npm-side Trusted Publisher missing or pointing at wrong workflow/env | Re-do Step 2; verify workflow filename + environment name match exactly |
+| `npm error code EOTP` | Workflow is still using the legacy token path AND the token doesn't bypass 2FA | Remove `NODE_AUTH_TOKEN` from `release.yml`; Trusted Publishing doesn't use tokens at all |
+| `npm error code E403 - 403 Forbidden` | Trusted Publisher exists but env name in workflow doesn't match the npm-side configuration | Align `environment: name:` in `release.yml` with the npm Trusted Publisher form |
+| `tag v0.1.x does not match package.json 0.1.y` | Forgot to bump `package.json` before tagging | Delete tag (`git tag -d v0.1.x && git push --delete origin v0.1.x`), bump, retag |
 | `npm error provenance: failed to verify` | Renamed repo, or pushed from a fork, or `repository.url` drifted | Realign `package.json#repository.url` with the actual remote |
 | Workflow stuck on "Waiting for review" | Required reviewer configured in env, no approver online | Approve via Actions UI, or remove the reviewer requirement |
 
+---
+
+## Appendix A - Legacy token path (breakglass / first-ever publish)
+
+Use this only if Trusted Publishing isn't yet configured (e.g. the
+package doesn't exist on npm yet) or as a fallback if OIDC ever fails.
+
+### Generate a token
+
+1. <https://www.npmjs.com/settings/~/tokens> → **Generate New Token →
+   Granular Access Token**.
+2. Fill in:
+
+   | Field | Value |
+   |---|---|
+   | Token name | `hapi-monitor-ci-breakglass` |
+   | Expiration | 7-30 days (short - this is a one-shot tool) |
+   | Allowed IP ranges | leave blank |
+   | Permissions → Packages and scopes | `Read and write` |
+   | Packages and scopes | `All packages` (if package doesn't exist yet) or `hapi-monitor` (if it does) |
+   | **Bypass 2FA when publishing this package** | **YES** (CI cannot enter an OTP) |
+
+3. Copy the token.
+
+### Wire it up
+
+```bash
+gh secret set NPM_TOKEN --repo "$OWNER/$REPO" --env npm --body "npm_xxx"
+```
+
+### Restore the workflow
+
+Add this back to the publish step in `release.yml`:
+
+```yaml
+- name: Publish to npm with provenance
+  run: npm publish --provenance --access public
+  env:
+    NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
+```
+
+### Then revert
+
+After the publish succeeds, **revoke the token immediately**, remove
+the secret, and restore the OIDC-only version of `release.yml`. Long
+lived tokens are a liability; minimise the window they're alive.
+
 ## Last reviewed
 
-- Bootstrap: 2026-06-02
+- 2026-06-02 - migrated primary path to Trusted Publishing (#19)

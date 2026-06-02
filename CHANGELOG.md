@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.1] - 2026-06-02
+
+### Security
+- Release workflow now uses npm Trusted Publishing (OIDC) instead of a
+  long-lived `NPM_TOKEN`. No bearer credentials live on the account or
+  in GitHub secrets for routine publishes (#19).
+- `NPM_SETUP.md` rewritten - Trusted Publishing is the documented
+  primary path; token instructions demoted to a breakglass appendix.
+
+## [0.1.0] - 2026-06-02
+
 ### Added
 - Initial extraction from `server-setup/scripts/hapi/` into a standalone repo.
 - npm packaging with `bin/hapi-monitor.js` Node wrapper around the bash entrypoint.

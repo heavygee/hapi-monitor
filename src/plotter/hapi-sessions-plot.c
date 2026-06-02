@@ -17,7 +17,7 @@
 #define MAX_W 128
 #define MAX_H 24
 
-enum { COL_NONE = 0, COL_WORK = 1, COL_PEAK = 2 };
+enum { COL_NONE = 0, COL_WORK = 1, COL_PEAK = 2, COL_BOTH = 3 };
 
 /*
  * UTF-8 box glyphs matching ncurses ACS used in nvtop src/plot.c.
@@ -152,8 +152,16 @@ static void put_ch(Canvas *c, int cx, int cy, unsigned char glyph, int col) {
     if (cx < 0 || cx >= c->w || cy < 0 || cy >= c->h)
         return;
     int i = cy * c->w + cx;
+    unsigned char existing = c->color[i];
     c->ch[i] = glyph;
-    c->color[i] = (unsigned char)col;
+    /* nvtop trick (#14): when both series occupy the same cell, mark it so
+     * the renderer can alternate colors per character. Otherwise the second
+     * series silently overwrites the first and the operator thinks peak
+     * isn't being tracked. */
+    if (existing != COL_NONE && existing != (unsigned char)col)
+        c->color[i] = COL_BOTH;
+    else
+        c->color[i] = (unsigned char)col;
 }
 
 static void hline_cells(Canvas *c, int x0, int x1, int cy, int col) {
@@ -517,6 +525,10 @@ int main(void) {
                 ansi(plain, fg46);
             else if (canvas.color[i] == COL_PEAK)
                 ansi(plain, fg201);
+            else if (canvas.color[i] == COL_BOTH)
+                /* Alternate per-cell so the overlap reads as a striped
+                 * dual-color line. Both series are clearly visible. */
+                ansi(plain, (cx % 2 == 0) ? fg46 : fg201);
             fputs_utf8_cp(glyph_cp(glyph));
             if (!plain && canvas.color[i] != COL_NONE)
                 ansi_reset(plain);

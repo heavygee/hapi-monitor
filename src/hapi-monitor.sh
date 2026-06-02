@@ -570,7 +570,15 @@ class LineCanvas:
     def put(self, cx, cy, ch, color):
         if 0 <= cx < self.w and 0 <= cy < self.h:
             self.grid[cy][cx] = ch
-            self.color[cy][cx] = color
+            existing = self.color[cy][cx]
+            # nvtop trick (#14): mark overlapping cells so the renderer can
+            # alternate colors per character. Without this, the second series
+            # silently overwrites the first and the operator thinks peak is
+            # not being tracked when working == peak.
+            if existing is not None and existing != color:
+                self.color[cy][cx] = 'both'
+            else:
+                self.color[cy][cx] = color
 
     def hline(self, x0, x1, cy, color):
         if x0 > x1:
@@ -585,7 +593,7 @@ class LineCanvas:
             if not ch:
                 out.append(' ')
                 continue
-            out.append(color_fn(ch, self.color[cy][cx]))
+            out.append(color_fn(ch, self.color[cy][cx], cx))
         return ''.join(out)
 
 def align_scroll_samples(samples, width):
@@ -746,13 +754,17 @@ def render_agent_chart(state, width, height):
     for tv in chart_y_tick_values(max_y):
         tick_rows[tick_row_for_value(tv, max_y, plot_h)] = str(tv)
 
-    def line_style(ch, series):
+    def line_style(ch, series, cx):
         if not T.use or not series:
             return ch
         if series == color_work:
             return f'{t.fg(46)}{ch}{t.R}'
         if series == color_peak:
             return f'{t.fg(201)}{ch}{t.R}'
+        if series == 'both':
+            # Alternate per column so the overlap reads as a striped line.
+            colr = 46 if (cx % 2 == 0) else 201
+            return f'{t.fg(colr)}{ch}{t.R}'
         return ch
 
     def box_row(content_vis):

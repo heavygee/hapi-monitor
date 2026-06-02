@@ -1,11 +1,17 @@
-# hapi-monitor
+<p align="center">
+  <img src="https://raw.githubusercontent.com/heavygee/hapi-monitor/main/docs/logo.png" alt="hapi-monitor" width="640">
+</p>
 
-> **htop** for [HAPI](https://github.com/tiann/hapi) sessions.
+<h1 align="center">hapi-monitor</h1>
 
-[![CI](https://github.com/heavygee/hapi-monitor/actions/workflows/ci.yml/badge.svg)](https://github.com/heavygee/hapi-monitor/actions/workflows/ci.yml)
-[![npm version](https://img.shields.io/npm/v/hapi-monitor.svg)](https://www.npmjs.com/package/hapi-monitor)
-[![license](https://img.shields.io/github/license/heavygee/hapi-monitor.svg)](LICENSE)
-[![node](https://img.shields.io/node/v/hapi-monitor.svg)](package.json)
+<p align="center"><b>htop</b> for <a href="https://github.com/tiann/hapi">HAPI</a> sessions.</p>
+
+<p align="center">
+  <a href="https://github.com/heavygee/hapi-monitor/actions/workflows/ci.yml"><img alt="CI" src="https://github.com/heavygee/hapi-monitor/actions/workflows/ci.yml/badge.svg"></a>
+  <a href="https://www.npmjs.com/package/hapi-monitor"><img alt="npm version" src="https://img.shields.io/npm/v/hapi-monitor.svg"></a>
+  <a href="LICENSE"><img alt="license" src="https://img.shields.io/github/license/heavygee/hapi-monitor.svg"></a>
+  <a href="package.json"><img alt="node" src="https://img.shields.io/node/v/hapi-monitor.svg"></a>
+</p>
 
 A live terminal monitor for a [HAPI](https://github.com/tiann/hapi) hub —
 the thing that orchestrates Cursor / Claude / Codex / Gemini agent sessions
@@ -17,23 +23,7 @@ working, a sticky-cursor agent table sorted by attention (`STUCK?`,
 truncation, and an alt-screen TUI with j/k navigation and an `i` toggle
 for inactive sessions.
 
-```
-HAPI                                    BUILD + STATE                            ┌ AGENTS ──────────┐
-  ██╗  ██╗   █████╗   ██████╗  ██╗      app 0.18.4  p1  cli 0.18.4               │  ┤ ── working 3 │
-  ██║  ██║  ██╔══██╗  ██╔══██╗ ██║      git driver/integration@56bdeac*          │ 8┤ ┌─┐    ┌─┐   │
-  ██║  ██║  ██║  ██║  ██║  ██║ ██║      hub active:24571  run active:32517       │ 4┤ │ │ ┌──┘ └─┐ │
-  ███████║  ███████║  ██████╔╝ ██║      sessions 14   ◆WORKING 3 ●OK 11          │ 0┤─┘ └─┘      └─│
-  ...                                                                            └──────────────────┘
-
- ⚡ ATTENTION REQUIRED (3)
-   S  TYPE   PROJ       MODL  THINK    CPU    RAM    NOTE
-   ◆  CURSOR hapi       ?auto YES 2s   8.7%   1.5%   running fix for routing edge case
-   ◆  CLAUDE hapi       $sonn YES 1s   0.6%   0.8%   me bb2a89a2 ~/.bun/bin/bun --cwd ~/coding/hapi-driver
-
- ✓ IDLE & READY (11)
-   ●  CURSOR server-se… ?auto —        0.3%   0.4%   ~/coding/server-setup
-   ...
-```
+![hapi-monitor screenshot](https://raw.githubusercontent.com/heavygee/hapi-monitor/main/docs/screenshot.png)
 
 ## Why this exists
 

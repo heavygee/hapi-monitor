@@ -77,8 +77,11 @@ appear.
 
 ## Social preview
 
-Placeholder. `.github/social-preview.png` (1280×640) to be generated and
-uploaded via Settings → General → Social preview.
+Placeholder. Brand assets exist (`docs/logo.png` 1637×960,
+`docs/screenshot.png` 1297×748) - operator to compose / crop to
+**1280×640 PNG** (≤ 1MB), commit as `.github/social-preview.png`, and
+upload via Settings → General → Social preview. Template reference:
+`~/coding/skills/perfect-github-setup-and-operation/repository-open-graph-template.png`.
 
 ## Apply Tier H controls via `gh`
 

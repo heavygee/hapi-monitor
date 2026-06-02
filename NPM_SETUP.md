@@ -98,12 +98,22 @@ subsequent publishes are tokenless.
 `.github/workflows/release.yml` should have:
 
 - `permissions.id-token: write` (lets the runner mint an OIDC token)
-- `actions/setup-node` with `registry-url: https://registry.npmjs.org/`
+- `actions/setup-node` with `node-version: "22"` and `registry-url: https://registry.npmjs.org/`
+- An explicit `npm install -g npm@latest` step before `npm publish`
 - `npm publish --provenance --access public` with **no** `NODE_AUTH_TOKEN`
 
-The npm CLI (10.6+) auto-detects OIDC when those three conditions are
-met and exchanges the OIDC token for a short-lived publish credential.
-You don't have to do anything special in the workflow YAML.
+### npm CLI version requirement (the gotcha)
+
+Tokenless OIDC publishing requires **npm CLI >= 11.5.1** (Aug 2025).
+Older npm versions sign the provenance attestation (which uses the
+OIDC token directly via sigstore) but then still demand a bearer token
+for the actual `PUT /package` request, and 404 without one.
+
+`actions/setup-node@v6` with `node-version: "20"` ships npm 10.x, which
+will fail. `node-version: "22"` is also a 10.x npm. The reliable
+recipe is to always force `npm install -g npm@latest` as a workflow
+step before any publish - cheap, deterministic, and survives upstream
+node-image drift.
 
 ## Step 4 - Confirm `package.json#repository.url`
 

@@ -27,7 +27,11 @@ jobs:
           shellcheck --severity=warning \
             src/hapi-monitor.sh \
             scripts/build-plotter.sh \
-            test/smoke.sh
+            scripts/lint-py.sh \
+            scripts/owasp-gate.sh \
+            test/smoke.sh \
+            test/render-snapshot.sh \
+            test/update-snapshots.sh
 
   python-syntax:
     name: python-syntax
@@ -85,6 +89,17 @@ jobs:
       - name: Run smoke test
         run: bash test/smoke.sh
 
+  render-snapshot:
+    name: render-snapshot
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.11"
+      - name: TUI golden-frame snapshot tests
+        run: bash test/render-snapshot.sh
+
   secret-scan:
     name: secret-scan
     runs-on: ubuntu-latest
@@ -118,7 +133,7 @@ jobs:
   ci:
     name: ci
     runs-on: ubuntu-latest
-    needs: [shellcheck, python-syntax, build-plotter, node-wrapper, smoke, secret-scan, owasp-sast]
+    needs: [shellcheck, python-syntax, build-plotter, node-wrapper, smoke, render-snapshot, secret-scan, owasp-sast]
     if: always()
     steps:
       - name: Aggregate result

@@ -79,6 +79,8 @@ Environment:
   HAPI_SESSIONS_PLOT    native chart binary (default: src/plotter/hapi-sessions-plot; auto-built if cc present)
   HAPI_HEALTH_LEGACY_CARDS  1 = old 7-line bordered cards for WORKING/STUCK/ZOMBIE
   HAPI_HEALTH_IDLE_MAX  cap idle rows (default: fit terminal below header + alerts)
+  HAPI_RENDER_FIXTURE   path to JSON fixture; bypasses hub, freezes time, emits
+                        one deterministic frame (used by test/render-snapshot.sh)
   NO_COLOR / HAPI_FORCE_COLOR / FORCE_COLOR
 EOF
 }
@@ -2289,6 +2291,63 @@ def _friendly_exit(err):
     print(f'  settings: {settings_path}', file=sys.stderr)
     print(f'  override with HAPI_HUB_URL / HAPI_JWT / HAPI_SETTINGS', file=sys.stderr)
     sys.exit(1)
+
+
+def _activate_fixture_mode(fixture_path):
+    """Render one deterministic frame from a JSON fixture and exit.
+
+    Used by test/render-snapshot.sh - bypasses gather_rows() entirely,
+    freezes time, and stubs collect_build_info() so the output is a
+    pure function of the fixture file. See test/fixtures/README.md.
+    """
+    global show_inactive
+    fix = json.loads(Path(fixture_path).read_text())
+
+    if 'now' in fix:
+        fixed_dt = datetime.fromisoformat(fix['now'])
+        frozen_epoch = float(fix.get('now_epoch') or fixed_dt.timestamp())
+
+        class _FrozenDT(datetime):
+            @classmethod
+            def now(cls, tz=None):
+                if tz is None:
+                    return fixed_dt
+                return fixed_dt.astimezone(tz)
+
+        globals()['datetime'] = _FrozenDT
+        time.time = lambda: frozen_epoch
+
+    if 'show_inactive' in fix:
+        show_inactive = bool(fix['show_inactive'])
+
+    injected_builds = fix.get('builds') or {}
+
+    def _stub_builds():
+        return injected_builds
+    globals()['collect_build_info'] = _stub_builds
+
+    chart = fix.get('chart')
+    if chart is not None:
+        def _stub_chart(_rows):
+            return {
+                'samples': [list(s) for s in chart.get('samples') or []],
+                'peak': int(chart.get('peak') or 0),
+            }
+        globals()['record_chart_sample'] = _stub_chart
+
+    rows = list(fix.get('rows') or [])
+    cursor_sid = fix.get('cursor_sid')
+    emit(build_frame(rows, cursor_sid=cursor_sid))
+    sys.exit(0)
+
+
+_fixture = os.environ.get('HAPI_RENDER_FIXTURE')
+if _fixture:
+    try:
+        _activate_fixture_mode(_fixture)
+    except (OSError, ValueError, KeyError) as _err:
+        print(f'hapi-monitor: fixture render failed: {_err}', file=sys.stderr)
+        sys.exit(1)
 
 try:
     if as_json:

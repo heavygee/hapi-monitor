@@ -56,14 +56,26 @@ docs/                      Long-form supplementary docs (if any)
 ## Local verification before opening a PR
 
 ```bash
-shellcheck src/hapi-monitor.sh scripts/build-plotter.sh
-bash scripts/build-plotter.sh           # native plotter still compiles
-node bin/hapi-monitor.js --help         # wrapper still works
-bash test/smoke.sh                       # smoke test passes (needs hub OR mocked)
+shellcheck src/hapi-monitor.sh scripts/*.sh test/*.sh
+bash scripts/lint-py.sh                  # embedded Python parses
+bash scripts/build-plotter.sh            # native plotter still compiles
+node bin/hapi-monitor.js --help          # wrapper still works
+bash test/smoke.sh                        # smoke test passes (needs hub OR mocked)
+bash test/render-snapshot.sh             # TUI goldens match + 4 historic-bug regressions
 ```
 
 CI runs the same checks. PRs can't merge until the aggregate `ci` job is
 green.
+
+If a TUI-affecting change makes a golden snapshot legitimately drift,
+regenerate intentionally:
+
+```bash
+bash test/update-snapshots.sh            # rewrites test/snapshots/*.txt
+git diff test/snapshots/                  # eyeball every changed line
+```
+
+Never blindly `cp got snapshot` - the goldens are the visual contract.
 
 ## Conventional commits
 

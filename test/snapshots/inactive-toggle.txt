@@ -1,0 +1,37 @@
+
+                                        BUILD + STATE  ┌ AGENTS ──────────────────────────────────┐                     
+  ██╗  ██╗   █████╗   ██████╗  ██╗      app 0.1.1  p1  cli 0.1.1  |   ┤ working 1                     peak 1 |          
+  ██║  ██║  ██╔══██╗  ██╔══██╗ ██║      git main@abc1234  |  1┤                                   ───|                  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      hub active:1001  run active:1002  |   ┤                                      |  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      web abc1234@2026-06-02 17:00  sync  |   ┤                                      |
+  ███████║  ███████║  ██████╔╝ ██║      hub1  running pid 2001 :8765  |   ┤                                      |      
+  ██╔══██║  ██╔══██║  ██╔═══╝  ██║      sessions 33   ●OK 3 ○INACTIVE 30  |   ┤                                      |  
+  ██║  ██║  ██║  ██║  ██║      ██║        |  0┤                                      |                                  
+  ██║  ██║  ██║  ██║  ██║      ██║        |   ┤-30s     -20s         -10s         -0s|                                  
+  ╚═╝  ╚═╝  ╚═╝  ╚═╝  ╚═╝      ╚═╝        └──────────────────────────────────────────┘                                  
+ j/k ↑↓ select · TAB alert · g/G top/bot · i hide inactive · q quit                                                     
+  ONLINE  hub http://hub.test  ·  2026-06-02 18:00:00  ·  stuck>20m                                                     
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+IDLE & READY (3)                                                                                                        
+   S  TYPE   PROJ       MODL  THINK    CPU    RAM    NOTE
+   ●  CURSOR live-0     ?g5   —        —      —      /home/dev/live-0                                                   
+   ●  CURSOR live-1     ?g5   —        —      —      /home/dev/live-1                                                   
+   ●  CURSOR live-2     ?g5   —        —      —      /home/dev/live-2                                                   
+
+INACTIVE (30)                                                                                                           
+   ○  CURSOR dead-00    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-01    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-02    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-03    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-04    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-05    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-06    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-07    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-08    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-09    ?g5   —        —      —                                                                         
+   ○  CURSOR dead-10    ?g5   —        —      —                                                                         
+  … +19 inactive below                                                                                                  
+
+OK  WORKING  STUCK?  ZOMBIE  |  $ prem  · eco  ? auto  |  --watch  --json  --plain                                      
+33 sessions (incl inactive) · j/k to scroll · hub http://hub.test                                                       

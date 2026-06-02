@@ -1,0 +1,30 @@
+
+                                        BUILD + STATE  ┌ AGENTS ──────────────────────────────────┐                     
+  ██╗  ██╗   █████╗   ██████╗  ██╗      app 0.1.1  p1  cli 0.1.1  |   ┤ working 0                     peak 0 |          
+  ██║  ██║  ██╔══██╗  ██╔══██╗ ██║      git main@abc1234  |  1┤                                      |                  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      hub active:1001  run active:1002  |   ┤                                      |  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      web abc1234@2026-06-02 17:00  sync  |   ┤                                      |
+  ███████║  ███████║  ██████╔╝ ██║      hub1  running pid 2001 :8765  |   ┤                                      |      
+  ██╔══██║  ██╔══██║  ██╔═══╝  ██║      sessions 10   ●OK 10  |   ┤                                      |              
+  ██║  ██║  ██║  ██║  ██║      ██║        |  0┤                              ────────|                                  
+  ██║  ██║  ██║  ██║  ██║      ██║        |   ┤-105s    -70s         -35s         -0s|                                  
+  ╚═╝  ╚═╝  ╚═╝  ╚═╝  ╚═╝      ╚═╝        └──────────────────────────────────────────┘                                  
+ j/k ↑↓ select · TAB alert · g/G top/bot · i show inactive · q quit                                                     
+  ONLINE  hub http://hub.test  ·  2026-06-02 18:00:00  ·  stuck>20m                                                     
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+IDLE & READY (10)                                                                                                       
+   S  TYPE   PROJ       MODL  THINK    CPU    RAM    NOTE
+   ●  CURSOR proj-00    ?g5   —        —      —      /home/dev/proj-00                                                  
+   ●  CLAUDE proj-01    ?g5   —        —      —      /home/dev/proj-01                                                  
+   ●  CODEX  proj-02    ?g5   —        —      —      /home/dev/proj-02                                                  
+   ●  CURSOR proj-03    ?g5   —        —      —      /home/dev/proj-03                                                  
+   ●  CLAUDE proj-04    ?g5   —        —      —      /home/dev/proj-04                                                  
+   ●  CODEX  proj-05    ?g5   —        —      —      /home/dev/proj-05                                                  
+   ●  CURSOR proj-06    ?g5   —        —      —      /home/dev/proj-06                                                  
+   ●  CLAUDE proj-07    ?g5   —        —      —      /home/dev/proj-07                                                  
+   ●  CODEX  proj-08    ?g5   —        —      —      /home/dev/proj-08                                                  
+   ●  CURSOR proj-09    ?g5   —        —      —      /home/dev/proj-09                                                  
+
+OK  WORKING  STUCK?  ZOMBIE  |  $ prem  · eco  ? auto  |  --watch  --json  --plain                                      
+10 sessions · j/k to scroll · hub http://hub.test                                                                       

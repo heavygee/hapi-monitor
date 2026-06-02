@@ -1,0 +1,73 @@
+{
+  "now": "2026-06-02T18:00:00+00:00",
+  "now_epoch": 1780423200,
+  "show_inactive": false,
+  "cursor_sid": null,
+  "builds": {
+    "appVersionSource": "0.1.1",
+    "protocolVersion": "1",
+    "gitCommit": "abc1234",
+    "gitBranch": "main",
+    "gitDirty": false,
+    "cliVersion": "0.1.1",
+    "bunVersion": "1.2.0",
+    "hubService": {
+      "ActiveState": "active",
+      "MainPID": "1001"
+    },
+    "runnerService": {
+      "ActiveState": "active",
+      "MainPID": "1002"
+    },
+    "web": {
+      "distBundle": "index-abc1234.js",
+      "distBuiltAt": "2026-06-02 17:00",
+      "embeddedBundle": "index-abc1234.js",
+      "embeddedGeneratedAt": "2026-06-02 17:00",
+      "bundlesMatch": true,
+      "embeddedStale": false
+    },
+    "machines": [
+      {
+        "host": "hub1",
+        "cliVersion": "0.1.0",
+        "libDir": "/opt/hapi",
+        "runnerStatus": "running",
+        "runnerPid": "2001",
+        "runnerPort": "8765"
+      }
+    ]
+  },
+  "chart": {
+    "samples": [
+      [
+        0,
+        0
+      ]
+    ],
+    "peak": 0
+  },
+  "rows": [
+    {
+      "status": "OK",
+      "sid": "10101010-1010-1010-1010-101010101010",
+      "sid8": "10101010",
+      "flavor": "cursor",
+      "path": "/home/dev/acme",
+      "machineId": "hub1",
+      "project": "acme",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-10101010",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780423140000,
+      "updatedAt": 1780423140000
+    }
+  ]
+}

@@ -1,0 +1,165 @@
+{
+  "now": "2026-06-02T18:00:00+00:00",
+  "now_epoch": 1780423200,
+  "show_inactive": false,
+  "cursor_sid": null,
+  "builds": {
+    "appVersionSource": "0.1.1",
+    "protocolVersion": "1",
+    "gitCommit": "abc1234",
+    "gitBranch": "main",
+    "gitDirty": false,
+    "cliVersion": "0.1.1",
+    "bunVersion": "1.2.0",
+    "hubService": {
+      "ActiveState": "active",
+      "MainPID": "1001"
+    },
+    "runnerService": {
+      "ActiveState": "active",
+      "MainPID": "1002"
+    },
+    "web": {
+      "distBundle": "index-abc1234.js",
+      "distBuiltAt": "2026-06-02 17:00",
+      "embeddedBundle": "index-abc1234.js",
+      "embeddedGeneratedAt": "2026-06-02 17:00",
+      "bundlesMatch": true,
+      "embeddedStale": false
+    },
+    "machines": [
+      {
+        "host": "hub1",
+        "cliVersion": "0.1.0",
+        "libDir": "/opt/hapi",
+        "runnerStatus": "running",
+        "runnerPid": "2001",
+        "runnerPort": "8765"
+      }
+    ]
+  },
+  "chart": {
+    "samples": [
+      [
+        1,
+        2
+      ],
+      [
+        1,
+        2
+      ],
+      [
+        2,
+        2
+      ]
+    ],
+    "peak": 2
+  },
+  "rows": [
+    {
+      "status": "WORKING",
+      "sid": "20202020-2020-2020-2020-202020202020",
+      "sid8": "20202020",
+      "flavor": "claude",
+      "path": "/home/dev/bots",
+      "machineId": "hub1",
+      "project": "bots",
+      "thinking": true,
+      "thinkingAt": 1780423020000,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-20202020",
+      "modelTier": "$",
+      "modelLabel": "Sonnet",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780423200000,
+      "updatedAt": 1780423200000
+    },
+    {
+      "status": "STUCK?",
+      "sid": "21212121-2121-2121-2121-212121212121",
+      "sid8": "21212121",
+      "flavor": "cursor",
+      "path": "/home/dev/legacy",
+      "machineId": "hub1",
+      "project": "legacy",
+      "thinking": true,
+      "thinkingAt": 1780421700000,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-21212121",
+      "modelTier": "?",
+      "modelLabel": "auto",
+      "note": "thinking 25m > stuck>20m",
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780423200000,
+      "updatedAt": 1780423200000
+    },
+    {
+      "status": "ZOMBIE",
+      "sid": "22222222-2222-2222-2222-222222222222",
+      "sid8": "22222222",
+      "flavor": "codex",
+      "path": "/home/dev/ghost",
+      "machineId": "hub1",
+      "project": "ghost",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": null,
+      "agentSessionId": "agent-22222222",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": "active but no runner pid",
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780416000000,
+      "updatedAt": 1780416000000
+    },
+    {
+      "status": "OK",
+      "sid": "23232323-2323-2323-2323-232323232323",
+      "sid8": "23232323",
+      "flavor": "cursor",
+      "path": "/home/dev/acme",
+      "machineId": "hub1",
+      "project": "acme",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-23232323",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780423080000,
+      "updatedAt": 1780423080000
+    },
+    {
+      "status": "OK",
+      "sid": "24242424-2424-2424-2424-242424242424",
+      "sid8": "24242424",
+      "flavor": "cursor",
+      "path": "/home/dev/acme",
+      "machineId": "hub1",
+      "project": "acme",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-24242424",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422960000,
+      "updatedAt": 1780422960000
+    }
+  ]
+}

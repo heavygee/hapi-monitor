@@ -5,6 +5,22 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Golden-frame TUI snapshot tests (`test/render-snapshot.sh`,
+  `test/fixtures/*.json`, `test/snapshots/*.txt`) covering five
+  scenarios: minimal, alerts, idle-only, inactive-toggle, chart-overlap.
+  CI fails on output drift; `bash test/update-snapshots.sh` regenerates
+  intentionally (#18).
+- `HAPI_RENDER_FIXTURE` env var: load a JSON fixture, freeze time, stub
+  hub I/O, emit one deterministic frame. Renders without a hub and
+  without the keyboard loop - the foundation that snapshot tests sit on.
+- Explicit historic-bug regression assertions in the snapshot runner -
+  if any of #7, #8, #12, or #14 silently regresses the relevant
+  assertion blows up even if surrounding snapshot text drifted in a
+  misleading way.
+- `render-snapshot` CI job promoted to a required gate alongside
+  `smoke`, `shellcheck`, and the security scanners.
+
 ## [0.1.1] - 2026-06-02
 
 ### Security

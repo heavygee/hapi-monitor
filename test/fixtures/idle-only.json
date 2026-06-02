@@ -1,0 +1,290 @@
+{
+  "now": "2026-06-02T18:00:00+00:00",
+  "now_epoch": 1780423200,
+  "show_inactive": false,
+  "cursor_sid": null,
+  "builds": {
+    "appVersionSource": "0.1.1",
+    "protocolVersion": "1",
+    "gitCommit": "abc1234",
+    "gitBranch": "main",
+    "gitDirty": false,
+    "cliVersion": "0.1.1",
+    "bunVersion": "1.2.0",
+    "hubService": {
+      "ActiveState": "active",
+      "MainPID": "1001"
+    },
+    "runnerService": {
+      "ActiveState": "active",
+      "MainPID": "1002"
+    },
+    "web": {
+      "distBundle": "index-abc1234.js",
+      "distBuiltAt": "2026-06-02 17:00",
+      "embeddedBundle": "index-abc1234.js",
+      "embeddedGeneratedAt": "2026-06-02 17:00",
+      "bundlesMatch": true,
+      "embeddedStale": false
+    },
+    "machines": [
+      {
+        "host": "hub1",
+        "cliVersion": "0.1.0",
+        "libDir": "/opt/hapi",
+        "runnerStatus": "running",
+        "runnerPid": "2001",
+        "runnerPort": "8765"
+      }
+    ]
+  },
+  "chart": {
+    "samples": [
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ],
+      [
+        0,
+        0
+      ]
+    ],
+    "peak": 0
+  },
+  "rows": [
+    {
+      "status": "OK",
+      "sid": "30303030-3030-3030-3030-303030303030",
+      "sid8": "30303030",
+      "flavor": "cursor",
+      "path": "/home/dev/proj-00",
+      "machineId": "hub1",
+      "project": "proj-00",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-30303030",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780423080000,
+      "updatedAt": 1780423080000
+    },
+    {
+      "status": "OK",
+      "sid": "31313131-3131-3131-3131-313131313131",
+      "sid8": "31313131",
+      "flavor": "claude",
+      "path": "/home/dev/proj-01",
+      "machineId": "hub1",
+      "project": "proj-01",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-31313131",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422960000,
+      "updatedAt": 1780422960000
+    },
+    {
+      "status": "OK",
+      "sid": "32323232-3232-3232-3232-323232323232",
+      "sid8": "32323232",
+      "flavor": "codex",
+      "path": "/home/dev/proj-02",
+      "machineId": "hub1",
+      "project": "proj-02",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-32323232",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422840000,
+      "updatedAt": 1780422840000
+    },
+    {
+      "status": "OK",
+      "sid": "33333333-3333-3333-3333-333333333333",
+      "sid8": "33333333",
+      "flavor": "cursor",
+      "path": "/home/dev/proj-03",
+      "machineId": "hub1",
+      "project": "proj-03",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-33333333",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422720000,
+      "updatedAt": 1780422720000
+    },
+    {
+      "status": "OK",
+      "sid": "34343434-3434-3434-3434-343434343434",
+      "sid8": "34343434",
+      "flavor": "claude",
+      "path": "/home/dev/proj-04",
+      "machineId": "hub1",
+      "project": "proj-04",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-34343434",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422600000,
+      "updatedAt": 1780422600000
+    },
+    {
+      "status": "OK",
+      "sid": "35353535-3535-3535-3535-353535353535",
+      "sid8": "35353535",
+      "flavor": "codex",
+      "path": "/home/dev/proj-05",
+      "machineId": "hub1",
+      "project": "proj-05",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-35353535",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422480000,
+      "updatedAt": 1780422480000
+    },
+    {
+      "status": "OK",
+      "sid": "36363636-3636-3636-3636-363636363636",
+      "sid8": "36363636",
+      "flavor": "cursor",
+      "path": "/home/dev/proj-06",
+      "machineId": "hub1",
+      "project": "proj-06",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-36363636",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422360000,
+      "updatedAt": 1780422360000
+    },
+    {
+      "status": "OK",
+      "sid": "37373737-3737-3737-3737-373737373737",
+      "sid8": "37373737",
+      "flavor": "claude",
+      "path": "/home/dev/proj-07",
+      "machineId": "hub1",
+      "project": "proj-07",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-37373737",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422240000,
+      "updatedAt": 1780422240000
+    },
+    {
+      "status": "OK",
+      "sid": "38383838-3838-3838-3838-383838383838",
+      "sid8": "38383838",
+      "flavor": "codex",
+      "path": "/home/dev/proj-08",
+      "machineId": "hub1",
+      "project": "proj-08",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-38383838",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422120000,
+      "updatedAt": 1780422120000
+    },
+    {
+      "status": "OK",
+      "sid": "39393939-3939-3939-3939-393939393939",
+      "sid8": "39393939",
+      "flavor": "cursor",
+      "path": "/home/dev/proj-09",
+      "machineId": "hub1",
+      "project": "proj-09",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-39393939",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780422000000,
+      "updatedAt": 1780422000000
+    }
+  ]
+}

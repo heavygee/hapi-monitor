@@ -21,7 +21,7 @@ SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 # then ~/coding/hapi mirror. Anything that does not exist falls through.
 resolve_hapi_repo() {
   local cand
-  for cand in "${HAPI_REPO:-}" "$HOME/coding/hapi-active" "$HOME/coding/hapi-driver" "$HOME/coding/hapi"; do
+  for cand in "${HAPI_REPO:-}" "$HOME/coding/hapi/active" "$HOME/coding/hapi/driver" "$HOME/coding/hapi-active" "$HOME/coding/hapi-driver" "$HOME/coding/hapi"; do
     [[ -n "$cand" && -d "$cand" ]] && { printf '%s' "$cand"; return; }
   done
   printf '%s' "$HOME/coding/hapi"
@@ -72,7 +72,7 @@ Environment:
   HAPI_JWT              short-lived hub JWT; if set, skip the settings lookup
   HAPI_SETTINGS         path to JSON file containing {"cliApiToken": "..."}
                         (default: ~/.hapi/settings.json)
-  HAPI_REPO             repo root for build identifiers (default: ~/coding/hapi-active or ~/coding/hapi)
+  HAPI_REPO             repo root for build identifiers (default: ~/coding/hapi/active, falls back to ~/coding/hapi-active/~/coding/hapi)
   HAPI_STUCK_MINUTES    thinking longer than this → STUCK? (default 20)
   HAPI_WATCH_SEC        refresh interval for --watch (default 1; supports fractions e.g. 0.5)
   HAPI_CHART_STATE      sparkline history file (--watch; default $TMPDIR/hapi-monitor-chart.$$)

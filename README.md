@@ -144,7 +144,7 @@ on the same agent across re-sorts when statuses change.
 | `HAPI_HUB_PUBLIC_URL` | auto-detect (Tailscale Service URL if `tailscale` present) | Display-only canonical hub URL shown in the header. |
 | `HAPI_JWT` | — | Short-lived hub JWT; if set, skips the settings lookup. |
 | `HAPI_SETTINGS` | `~/.hapi/settings.json` | Path to JSON file containing `{"cliApiToken": "..."}` |
-| `HAPI_REPO` | `~/coding/hapi-active` or `~/coding/hapi` | Repo root for build identifiers in the header. |
+| `HAPI_REPO` | `~/coding/hapi/active` (falls back to legacy `~/coding/hapi-active` then `~/coding/hapi`) | Repo root for build identifiers in the header. |
 | `HAPI_STUCK_MINUTES` | `20` | Thinking longer than this → `STUCK?`. |
 | `HAPI_WATCH_SEC` | `1` | Refresh interval for `--watch` (fractions ok). |
 | `HAPI_CHART_STATE` | `$TMPDIR/...` | Sparkline history file (watch mode). |

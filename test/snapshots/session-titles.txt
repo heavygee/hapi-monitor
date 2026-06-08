@@ -1,0 +1,25 @@
+
+                                        BUILD + STATE  ┌ AGENTS ──────────────────────────────────┐                     
+  ██╗  ██╗   █████╗   ██████╗  ██╗      app 0.1.1  p1  cli 0.1.1  |   ┤ working 0                     peak 0 |          
+  ██║  ██║  ██╔══██╗  ██╔══██╗ ██║      git main@abc1234  |  1┤                                      |                  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      hub active:1001  run active:1002  |   ┤                                      |  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      web abc1234@2026-06-02 17:00  sync  |   ┤                                      |
+  ███████║  ███████║  ██████╔╝ ██║      hub1  running pid 2001 :8765  |   ┤                                      |      
+  ██╔══██║  ██╔══██║  ██╔═══╝  ██║      sessions 5   ●OK 5  |   ┤                                      |                
+  ██║  ██║  ██║  ██║  ██║      ██║        |  0┤                                  ────|                                  
+  ██║  ██║  ██║  ██║  ██║      ██║        |   ┤-45s     -30s         -15s         -0s|                                  
+  ╚═╝  ╚═╝  ╚═╝  ╚═╝  ╚═╝      ╚═╝        └──────────────────────────────────────────┘                                  
+ j/k ↑↓ select · TAB alert · g/G top/bot · i show inactive · q quit                                                     
+  ONLINE  hub http://hub.test  ·  2026-06-02 18:00:00  ·  stuck>20m                                                     
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+IDLE & READY (5)                                                                                                        
+   S  TYPE   PROJ       MODL  THINK    CPU    RAM    NOTE
+   ●  CURSOR hapi       ?g5   —        —      —      upstream issue/pr discovery                                        
+   ●  CURSOR hapi       ?g5   —        —      —      legacy chat attachments (resurrected)                              
+   ●  CURSOR hapi       ?g5   —        —      —      android watch                                                      
+   ●  CLAUDE hapi       ?g5   —        —      —      Peer: #829 mermaid parse-failure                                   
+   ●  CURSOR hapi       ?g5   —        —      —      /home/dev/hapi                                                     
+
+OK  WORKING  STUCK?  ZOMBIE  |  $ prem  · eco  ? auto  |  --watch  --json  --plain                                      
+5 sessions · j/k to scroll · hub http://hub.test                                                                        

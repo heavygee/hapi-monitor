@@ -189,7 +189,7 @@ Three sections, in priority order. All share the same column layout.
 | `THINK`| 9     | think state: `YES Ns` (currently thinking, N seconds elapsed), `—` (idle), `YES…` (very long-running) |
 | `CPU`  | 6     | live CPU% reported by the agent's host process |
 | `RAM`  | 6     | live RAM% reported by the agent's host process |
-| `NOTE` | rest  | best-effort context: command line, working dir, error line, etc. Truncated with `…` to fit |
+| `NOTE` | rest  | best-effort context, truncated with `…` to fit. Idle rows show the HAPI session title (`metadata.name`) when set, falling back to the working directory - lets you distinguish multiple agents in the same repo (#42). Attention rows show the agent process command line. |
 
 ### ATTENTION REQUIRED section
 

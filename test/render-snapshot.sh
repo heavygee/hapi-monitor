@@ -181,9 +181,17 @@ assert "#28  legacy cursor note carries '[legacy stream-json]' marker" \
 assert "#28  ACP cursor badge keeps uppercase CURSOR" \
   grep -qE '◆[[:space:]]+CURSOR[[:space:]]+modern' "$SNAP_DIR/cursor-acp-mix.txt"
 
+# Bug #42: idle rows must show metadata.name (HAPI session title) in the
+# NOTE column when set, falling back to path when unset. Pre-fix, five
+# idle rows in the same repo were visually identical.
+assert "#42  titled idle rows show the title in NOTE" \
+  grep -qF 'upstream issue/pr discovery' "$SNAP_DIR/session-titles.txt"
+assert "#42  unnamed idle rows still fall back to path" \
+  grep -qF '/home/dev/hapi' "$SNAP_DIR/session-titles.txt"
+
 if [[ $assert_fail -ne 0 ]]; then
   echo "regress: at least one historic-bug assertion failed" >&2
   exit 1
 fi
 
-echo "regress: all 7 historic-bug assertions pass"
+echo "regress: all 9 historic-bug assertions pass"

@@ -13,6 +13,16 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Idle rows now show the HAPI session title (`metadata.name`) in the
+  NOTE column when set, falling back to the working directory when
+  unset. Five agents living in `~/coding/hapi` are no longer visually
+  identical - each shows its operator-set title ("upstream issue/pr
+  discovery", "android watch", etc.) so they're individually
+  identifiable from the monitor. Snapshot fixture
+  `session-titles.json` + 2 regression assertions lock the rendering
+  (#42).
+
 ## [0.1.2] - 2026-06-08
 
 ### Added

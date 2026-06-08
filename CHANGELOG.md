@@ -3,6 +3,28 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.0](https://github.com/heavygee/hapi-monitor/compare/v0.1.3...v0.2.0) (2026-06-08)
+
+
+### Features
+
+* **tui:** surface HAPI session title in idle rows so same-repo agents are distinguishable ([#42](https://github.com/heavygee/hapi-monitor/issues/42)) ([#43](https://github.com/heavygee/hapi-monitor/issues/43)) ([f7549bd](https://github.com/heavygee/hapi-monitor/commit/f7549bd33c698e2d7381126253bd14ec62883659))
+
+
+### Bug Fixes
+
+* **release-please:** drop component prefix from tag (publish chain wants v0.1.4 not hapi-monitor-v0.1.4) ([#39](https://github.com/heavygee/hapi-monitor/issues/39)) ([9518a7a](https://github.com/heavygee/hapi-monitor/commit/9518a7a439751a9671d3bb5125752271756f3814))
+
+
+### Documentation
+
+* Docs:  ([f7549bd](https://github.com/heavygee/hapi-monitor/commit/f7549bd33c698e2d7381126253bd14ec62883659))
+
+
+### Continuous Integration
+
+* **deps:** Bump googleapis/release-please-action from 4 to 5 ([#38](https://github.com/heavygee/hapi-monitor/issues/38)) ([ec25fed](https://github.com/heavygee/hapi-monitor/commit/ec25fede3af1ed3e40fd547e03b85a0c4e18722c))
+
 ## [0.1.3](https://github.com/heavygee/hapi-monitor/compare/hapi-monitor-v0.1.2...hapi-monitor-v0.1.3) (2026-06-08)
 
 

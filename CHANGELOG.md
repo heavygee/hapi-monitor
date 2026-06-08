@@ -5,6 +5,17 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+### Added
+- Cursor session protocol indicator (#28). HAPI is migrating Cursor
+  sessions from stream-json to ACP; metadata now carries a
+  `cursorSessionProtocol` field. The monitor surfaces it so operators
+  can spot legacy holdouts during the rollout: ACP rows keep the
+  uppercase ` CURSOR ` badge, legacy rows render as lowercase
+  ` cursor ` in dim gray AND their NOTE column gets a
+  `[legacy stream-json]` marker. Width stays at 8 chars so column
+  alignment holds. New `cursor-acp-mix` snapshot fixture + 3 new
+  regression assertions cover the visual contract.
+
 ### Fixed
 - Local machineId is now read from `~/.hapi/settings.json` (canonical)
   with optional `HAPI_LOCAL_MACHINE_ID` env-var override; the vote

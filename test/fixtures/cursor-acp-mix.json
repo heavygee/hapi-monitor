@@ -41,58 +41,34 @@
   "chart": {
     "samples": [
       [
-        3,
-        3
+        1,
+        1
       ],
       [
-        3,
-        3
-      ],
-      [
-        3,
-        3
-      ],
-      [
-        3,
-        3
-      ],
-      [
-        3,
-        3
-      ],
-      [
-        3,
-        3
-      ],
-      [
-        3,
-        3
-      ],
-      [
-        3,
-        3
+        2,
+        2
       ]
     ],
-    "peak": 3
+    "peak": 2
   },
   "rows": [
     {
       "status": "WORKING",
-      "sid": "61616161-6161-6161-6161-616161616161",
-      "sid8": "61616161",
+      "sid": "70707070-7070-7070-7070-707070707070",
+      "sid8": "70707070",
       "flavor": "cursor",
-      "path": "/home/dev/alpha",
+      "path": "/home/dev/modern",
       "machineId": "hub1",
-      "project": "alpha",
+      "project": "modern",
       "thinking": true,
       "thinkingAt": 1780423080000,
       "lifecycle": "active",
       "hostPid": 4242,
-      "agentSessionId": "agent-61616161",
+      "agentSessionId": "agent-70707070",
       "cursorSessionProtocol": "acp",
-      "modelTier": "$",
-      "modelLabel": "GPT-5",
-      "note": null,
+      "modelTier": "?",
+      "modelLabel": "auto",
+      "note": "thinking 2m",
       "procs": [],
       "pending": 0,
       "recencyAt": 1780423200000,
@@ -100,43 +76,21 @@
     },
     {
       "status": "WORKING",
-      "sid": "62626262-6262-6262-6262-626262626262",
-      "sid8": "62626262",
-      "flavor": "claude",
-      "path": "/home/dev/beta",
+      "sid": "71717171-7171-7171-7171-717171717171",
+      "sid8": "71717171",
+      "flavor": "cursor",
+      "path": "/home/dev/oldsk00l",
       "machineId": "hub1",
-      "project": "beta",
+      "project": "oldsk00l",
       "thinking": true,
       "thinkingAt": 1780422960000,
       "lifecycle": "active",
       "hostPid": 4242,
-      "agentSessionId": "agent-62626262",
-      "cursorSessionProtocol": null,
-      "modelTier": "$",
-      "modelLabel": "Sonnet",
-      "note": null,
-      "procs": [],
-      "pending": 0,
-      "recencyAt": 1780423200000,
-      "updatedAt": 1780423200000
-    },
-    {
-      "status": "WORKING",
-      "sid": "63636363-6363-6363-6363-636363636363",
-      "sid8": "63636363",
-      "flavor": "codex",
-      "path": "/home/dev/gamma",
-      "machineId": "hub1",
-      "project": "gamma",
-      "thinking": true,
-      "thinkingAt": 1780422840000,
-      "lifecycle": "active",
-      "hostPid": 4242,
-      "agentSessionId": "agent-63636363",
-      "cursorSessionProtocol": null,
-      "modelTier": "\u00b7",
-      "modelLabel": "o4-mini",
-      "note": null,
+      "agentSessionId": "agent-71717171",
+      "cursorSessionProtocol": "stream-json",
+      "modelTier": "?",
+      "modelLabel": "auto",
+      "note": "thinking 4m [legacy stream-json]",
       "procs": [],
       "pending": 0,
       "recencyAt": 1780423200000,
@@ -144,17 +98,17 @@
     },
     {
       "status": "OK",
-      "sid": "64646464-6464-6464-6464-646464646464",
-      "sid8": "64646464",
+      "sid": "72727272-7272-7272-7272-727272727272",
+      "sid8": "72727272",
       "flavor": "cursor",
-      "path": "/home/dev/delta",
+      "path": "/home/dev/modern-idle",
       "machineId": "hub1",
-      "project": "delta",
+      "project": "modern-idle",
       "thinking": false,
       "thinkingAt": 0,
       "lifecycle": "active",
       "hostPid": 4242,
-      "agentSessionId": "agent-64646464",
+      "agentSessionId": "agent-72727272",
       "cursorSessionProtocol": "acp",
       "modelTier": "$",
       "modelLabel": "GPT-5",
@@ -163,6 +117,28 @@
       "pending": 0,
       "recencyAt": 1780423140000,
       "updatedAt": 1780423140000
+    },
+    {
+      "status": "OK",
+      "sid": "73737373-7373-7373-7373-737373737373",
+      "sid8": "73737373",
+      "flavor": "cursor",
+      "path": "/home/dev/legacy-idle",
+      "machineId": "hub1",
+      "project": "legacy-idle",
+      "thinking": false,
+      "thinkingAt": 0,
+      "lifecycle": "active",
+      "hostPid": 4242,
+      "agentSessionId": "agent-73737373",
+      "cursorSessionProtocol": "stream-json",
+      "modelTier": "$",
+      "modelLabel": "GPT-5",
+      "note": null,
+      "procs": [],
+      "pending": 0,
+      "recencyAt": 1780423020000,
+      "updatedAt": 1780423020000
     }
   ]
 }

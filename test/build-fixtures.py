@@ -69,16 +69,29 @@ def row(
     machine_id="hub1",
     lifecycle="active",
     procs=None,
+    cursor_protocol=None,
 ):
-    """Build one row dict matching gather_rows() output schema."""
+    """Build one row dict matching gather_rows() output schema.
+
+    ``cursor_protocol``: only meaningful when flavor=='cursor'. Defaults
+    to 'acp' for cursor rows (current world). Pass 'stream-json' (or any
+    non-'acp' string) to render the legacy badge + note marker (#28).
+    """
     if path is None:
         path = f"/home/dev/{project}"
     if agent_id is None:
         agent_id = f"agent-{sid[:8]}"
+    if flavor == "cursor" and cursor_protocol is None:
+        cursor_protocol = "acp"
     thinking_at = 0
     if thinking_min_ago is not None:
         thinking_at = NOW_MS - thinking_min_ago * 60_000
     updated_at = NOW_MS - updated_min_ago * 60_000
+    # Mirror src/hapi-monitor.sh:_annotate_note - fixture rows bypass
+    # gather_rows so the annotation has to happen here.
+    if (note and flavor == "cursor" and cursor_protocol != "acp"
+            and "[legacy stream-json]" not in note):
+        note = f"{note} [legacy stream-json]"
     return {
         "status": status,
         "sid": sid,
@@ -92,6 +105,7 @@ def row(
         "lifecycle": lifecycle,
         "hostPid": host_pid,
         "agentSessionId": agent_id,
+        "cursorSessionProtocol": cursor_protocol,
         "modelTier": model_tier,
         "modelLabel": model_label,
         "note": note,
@@ -224,6 +238,32 @@ FIXTURES["chart-overlap"] = {
             thinking_min_ago=6, model_tier="·", model_label="o4-mini"),
         row("OK", make_sid(0x64), flavor="cursor", project="delta",
             updated_min_ago=1),
+    ],
+}
+
+
+# 6. cursor-acp-mix: side-by-side ACP-migrated and legacy stream-json
+# cursor sessions. Direct regression for #28 - the legacy session must
+# render as lowercase 'cursor' (dim badge) AND its note must include
+# '[legacy stream-json]'. ACP rows keep the uppercase CURSOR badge.
+FIXTURES["cursor-acp-mix"] = {
+    "now": NOW_ISO,
+    "now_epoch": NOW_EPOCH,
+    "show_inactive": False,
+    "cursor_sid": None,
+    "builds": BUILDS,
+    "chart": {"samples": [[1, 1], [2, 2]], "peak": 2},
+    "rows": [
+        row("WORKING", make_sid(0x70), flavor="cursor", project="modern",
+            thinking_min_ago=2, model_tier="?", model_label="auto",
+            note="thinking 2m", cursor_protocol="acp"),
+        row("WORKING", make_sid(0x71), flavor="cursor", project="oldsk00l",
+            thinking_min_ago=4, model_tier="?", model_label="auto",
+            note="thinking 4m", cursor_protocol="stream-json"),
+        row("OK", make_sid(0x72), flavor="cursor", project="modern-idle",
+            updated_min_ago=1, cursor_protocol="acp"),
+        row("OK", make_sid(0x73), flavor="cursor", project="legacy-idle",
+            updated_min_ago=3, cursor_protocol="stream-json"),
     ],
 }
 

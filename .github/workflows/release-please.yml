@@ -1,0 +1,40 @@
+name: release-please
+
+# Conventional-commits-driven release automation.
+#
+# Every push to main, release-please:
+#   1. Reads the commit log since the last tag
+#   2. Computes the next semver from `feat:` / `fix:` / `!` prefixes
+#   3. Maintains a single draft 'chore(main): release X.Y.Z' PR with the
+#      bumped package.json + auto-generated CHANGELOG entry
+#   4. When that PR is merged, it tags vX.Y.Z and creates the GitHub Release
+#
+# Our separate release.yml workflow (this folder) listens for `v*` tag
+# pushes and publishes to npm via OIDC trusted publishing. So the full
+# chain is:
+#
+#   merge feat/fix PR → release-please opens release PR → merge release PR
+#   → tag created → release.yml fires → npm publish + GH Release attached
+#
+# Operator never types `npm version` or `git tag` again.
+#
+# See ops issue #31 for rollout notes.
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write       # release-please tags + publishes the GitHub Release
+  pull-requests: write  # release-please opens / updates the release PR
+
+jobs:
+  release-please:
+    name: release-please
+    runs-on: ubuntu-latest
+    steps:
+      - uses: googleapis/release-please-action@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          config-file: release-please-config.json
+          manifest-file: .release-please-manifest.json

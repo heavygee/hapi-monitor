@@ -5,6 +5,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 
 ## [Unreleased]
 
+## [0.1.2] - 2026-06-08
+
 ### Added
 - Cursor session protocol indicator (#28). HAPI is migrating Cursor
   sessions from stream-json to ACP; metadata now carries a

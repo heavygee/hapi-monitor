@@ -71,7 +71,9 @@ Environment:
                         HAPI_HUB_URL. Cached in $TMPDIR/hapi-hub-public-url.cache.
   HAPI_JWT              short-lived hub JWT; if set, skip the settings lookup
   HAPI_SETTINGS         path to JSON file containing {"cliApiToken": "..."}
-                        (default: ~/.hapi/settings.json)
+                        and (optionally) "machineId": "..." (default: ~/.hapi/settings.json)
+  HAPI_LOCAL_MACHINE_ID override the detected local machineId (see Status meanings in README;
+                        skips the ZOMBIE PID-check for any session NOT on this machineId)
   HAPI_REPO             repo root for build identifiers (default: ~/coding/hapi/active, falls back to ~/coding/hapi-active/~/coding/hapi)
   HAPI_STUCK_MINUTES    thinking longer than this → STUCK? (default 20)
   HAPI_WATCH_SEC        refresh interval for --watch (default 1; supports fractions e.g. 0.5)
@@ -1911,37 +1913,82 @@ _LOCAL_MACHINE_ID = [None]
 
 _AGENT_CMD_HINTS = ('hapi', 'happy', 'claude', 'codex', 'cursor')
 
-def _detect_local_machine_id(session_pairs):
-    """Find which machineId is THIS box by vote: any session whose hostPid is
-    a real local PID *and that local PID's cmdline looks agent-shaped* is, by
-    definition, running on this box. Most common machineId wins. Returns None
-    if no evidence (no agent processes here OR this box has no sessions);
-    callers should treat None as "all sessions remote" - safer than the old
-    "assume local" which produced false ZOMBIEs on multi-machine hubs (#25).
+def _detect_local_machine_id(sessions):
+    """Identify which machineId is THIS box. Resolution order:
 
-    We filter PIDs by cmdline hint to avoid coincidence collisions - small
-    PID integers from a remote box can easily match unrelated local PIDs."""
+      1. HAPI_LOCAL_MACHINE_ID env var (explicit operator override)
+      2. ``machineId`` field in the same settings.json we already read for
+         the CLI token (HAPI writes it on first runner start; canonical)
+      3. Vote by evidence: count sessions whose hostPid maps to a local
+         agent-shaped PID AND whose agentSessionId[:8] appears in that
+         local PID's cmdline. The agent-id cross-check defeats PID-space
+         collisions where a remote session's hostPid happens to equal one
+         of our local agent PIDs (codex review feedback on #26).
+
+    Returns None only if all three fail (no env, no settings.json, no live
+    local agent matched by both PID *and* session id). Callers treat None
+    as "all sessions remote" - errs on the side of missing a real local
+    zombie rather than producing a false zombie on a remote row (the
+    failure mode that opened #25).
+
+    ``sessions`` is the raw unfiltered session list from ``/api/sessions``
+    so detection survives an active ``--filter`` (codex feedback #2 on
+    #26). Each entry can be a bare session dict or an ``(item, detail)``
+    tuple; both shapes appear at call sites.
+
+    Cached on the module-level ``_LOCAL_MACHINE_ID`` slot once found - the
+    machine identity is stable for the life of the process."""
     if _LOCAL_MACHINE_ID[0]:
         return _LOCAL_MACHINE_ID[0]
-    local_pids = set()
+
+    env_mid = (os.environ.get('HAPI_LOCAL_MACHINE_ID') or '').strip()
+    if env_mid:
+        _LOCAL_MACHINE_ID[0] = env_mid
+        return env_mid
+
+    try:
+        if settings_path.exists():
+            mid = (json.loads(settings_path.read_text()).get('machineId') or '').strip()
+            if mid:
+                _LOCAL_MACHINE_ID[0] = mid
+                return mid
+    except (OSError, json.JSONDecodeError):
+        pass
+
+    # Vote fallback - keep cmdline alongside each agent-shaped PID so we
+    # can cross-check the session's agent id below (defeats PID collision).
+    local_procs = {}
     for line in ps_lines():
         parts = line.split(None, 5)
         if len(parts) >= 6 and parts[0].isdigit():
             cmd_low = parts[5].lower()
             if any(h in cmd_low for h in _AGENT_CMD_HINTS):
-                local_pids.add(int(parts[0]))
+                local_procs[int(parts[0])] = cmd_low
     votes = {}
-    for item, detail in session_pairs:
+    for entry in sessions:
+        if isinstance(entry, tuple):
+            item, detail = entry
+        else:
+            item, detail = entry, {}
         meta = detail.get('metadata') or item.get('metadata') or {}
         mid = meta.get('machineId') or item.get('machineId')
         hp = meta.get('hostPid')
-        if not mid or not hp:
+        agent_id = (meta.get('cursorSessionId') or meta.get('claudeSessionId')
+                    or meta.get('codexSessionId') or meta.get('agentSessionId') or '')
+        if not mid or not hp or not agent_id:
             continue
         try:
-            if int(hp) in local_pids:
-                votes[mid] = votes.get(mid, 0) + 1
+            hp_int = int(hp)
         except (TypeError, ValueError):
             continue
+        cmd = local_procs.get(hp_int)
+        if cmd is None:
+            continue
+        # Both the PID *and* the first 8 chars of the agent session id must
+        # be present in the local process cmdline - otherwise it's a PID
+        # collision with an unrelated local process and the vote is forged.
+        if agent_id[:8].lower() in cmd:
+            votes[mid] = votes.get(mid, 0) + 1
     if not votes:
         return None
     local_mid = max(votes, key=votes.get)
@@ -1980,7 +2027,13 @@ def _attn_queue_prune(current_sids):
 def gather_rows():
     """Build the (sorted) row list for one tick. Re-callable from the watch loop."""
     _PS_CACHE['lines'] = None  # invalidate ps cache for fresh CPU/RAM data
-    sessions_raw = get(f'{hub}/api/sessions').get('sessions', [])
+    sessions_all = get(f'{hub}/api/sessions').get('sessions', [])
+    # Detect from the FULL unfiltered list - a --filter must not be able to
+    # hide the evidence that identifies this box. Settings.json reads first
+    # so this only matters on installs without settings.json (codex feedback
+    # #2 on #26).
+    local_mid = _detect_local_machine_id(sessions_all)
+    sessions_raw = sessions_all
     if filt:
         sessions_raw = [s for s in sessions_raw if filt in json.dumps(s).lower()]
     if sessions_raw:
@@ -1988,14 +2041,10 @@ def gather_rows():
             session_pairs = list(_ex.map(_fetch_detail, sessions_raw))
     else:
         session_pairs = []
-    # Detect which machineId is THIS box so classify() can skip the local PID
-    # check for remote-resident sessions (Windows install, second Linux box,
-    # etc.). Without this, every remote session goes ZOMBIE the instant the
-    # hub reports it active (#25). Returns None if no evidence yet, in which
-    # case all sessions default to is_local=False (trust hub) - safer than
-    # the old "assume local for everyone" because false ZOMBIEs are more
-    # alarming than briefly-missed real ones.
-    local_mid = _detect_local_machine_id(session_pairs)
+    # Re-attempt detection with detail-enriched rows in case the summary
+    # endpoint didn't carry hostPid/agentSessionId for some sessions.
+    if not local_mid:
+        local_mid = _detect_local_machine_id(session_pairs)
     out_rows = []
     for item, detail in session_pairs:
         sid = item['id']

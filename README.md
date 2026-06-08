@@ -136,7 +136,13 @@ on the same agent across re-sorts when statuses change.
 | `☠` | `ZOMBIE` | active on THIS machine but no runner / agent process found in local `ps` |
 | `○` | `INACTIVE` | disconnected; hidden by default, toggle with `i` |
 
-**Multi-machine note:** the `ZOMBIE` check is only applied to sessions whose `machineId` matches this monitor's host. Sessions on other machines (a Windows install, a second Linux box) are classified purely from the hub's `active` / `thinking` flags - we have no way to introspect their `/proc`. Detection is automatic: the monitor learns its own `machineId` by matching session `hostPid` values against local PIDs of agent-shaped processes.
+**Multi-machine note:** the `ZOMBIE` check is only applied to sessions whose `machineId` matches this monitor's host. Sessions on other machines (a Windows install, a second Linux box) are classified purely from the hub's `active` / `thinking` flags - we have no way to introspect their `/proc`. Detection order:
+
+1. `HAPI_LOCAL_MACHINE_ID` env var (explicit override)
+2. `machineId` field in `~/.hapi/settings.json` (canonical - HAPI writes it on first runner start)
+3. Vote-by-evidence fallback (matches session `hostPid` AND first 8 chars of `agentSessionId` against local agent-shaped processes)
+
+If all three fail (no env, no settings file, no live local agent visible) every session is treated as remote, which prefers missing a real local zombie over producing a false zombie on a remote row.
 
 ## Environment variables
 
@@ -145,7 +151,8 @@ on the same agent across re-sorts when statuses change.
 | `HAPI_HUB_URL` | `http://127.0.0.1:3006` | Hub API target. Used for actual HTTP calls. |
 | `HAPI_HUB_PUBLIC_URL` | auto-detect (Tailscale Service URL if `tailscale` present) | Display-only canonical hub URL shown in the header. |
 | `HAPI_JWT` | — | Short-lived hub JWT; if set, skips the settings lookup. |
-| `HAPI_SETTINGS` | `~/.hapi/settings.json` | Path to JSON file containing `{"cliApiToken": "..."}` |
+| `HAPI_SETTINGS` | `~/.hapi/settings.json` | Path to JSON file containing `{"cliApiToken": "...", "machineId": "..."}` |
+| `HAPI_LOCAL_MACHINE_ID` | (auto-detect) | Override the detected local `machineId`. Sessions whose `machineId` differs are classified from hub flags only (no local PID check / no false ZOMBIE). |
 | `HAPI_REPO` | `~/coding/hapi/active` (falls back to legacy `~/coding/hapi-active` then `~/coding/hapi`) | Repo root for build identifiers in the header. |
 | `HAPI_STUCK_MINUTES` | `20` | Thinking longer than this → `STUCK?`. |
 | `HAPI_WATCH_SEC` | `1` | Refresh interval for `--watch` (fractions ok). |

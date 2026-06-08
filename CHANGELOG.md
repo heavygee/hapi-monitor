@@ -6,18 +6,20 @@ and this project adheres to [Semantic Versioning](https://semver.org/).
 ## [Unreleased]
 
 ### Fixed
+- Local machineId is now read from `~/.hapi/settings.json` (canonical)
+  with optional `HAPI_LOCAL_MACHINE_ID` env-var override; the vote
+  fallback now cross-checks the session's `agentSessionId[:8]` against
+  the local PID's cmdline to defeat PID-space collisions, and runs
+  against the full unfiltered session list so an active `--filter`
+  can't blind detection. Addresses three P2 codex-review findings on
+  the original #25 fix (#26).
 - Sessions running on a machine other than where `hapi-monitor` itself
   runs (Windows install, second Linux box, anything multi-machine) are
   no longer auto-flagged ZOMBIE the instant they go active. `classify()`
   now takes an `is_local` parameter and skips the local PID-aliveness
-  check for remote sessions, trusting the hub's `active` flag. The
-  local machineId is detected by evidence: any session whose `hostPid`
-  matches a local agent-shaped process votes for its machineId; most
-  common wins, cached for the session. Doc + anatomy updates align
-  the README's ZOMBIE definition and call out the multi-machine
-  behavior explicitly (#25). Also corrects stale anatomy-doc
-  description of the attention sort (still said "longest thinkingAt
-  first" after #23 made it queue-order).
+  check for remote sessions, trusting the hub's `active` flag (#25).
+  Also corrects stale anatomy-doc description of the attention sort
+  (still said "longest thinkingAt first" after #23 made it queue-order).
 - ATTENTION REQUIRED rows no longer reshuffle when agents transition
   between think cycles. Previously sorted by `thinkingAt`, which jumped
   every time an agent finished one thought and started another, making

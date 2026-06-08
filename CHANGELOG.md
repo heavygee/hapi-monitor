@@ -3,6 +3,14 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.1.3](https://github.com/heavygee/hapi-monitor/compare/hapi-monitor-v0.1.2...hapi-monitor-v0.1.3) (2026-06-08)
+
+
+### Bug Fixes
+
+* **release-please:** anchor to v0.1.2 commit so first PR is correct ([#34](https://github.com/heavygee/hapi-monitor/issues/34)) ([7ced2be](https://github.com/heavygee/hapi-monitor/commit/7ced2be5f7ec829dfa4c58a192602f2377d57a27))
+* **release-please:** move bootstrap-sha to top level so it's actually honored ([#36](https://github.com/heavygee/hapi-monitor/issues/36)) ([db89091](https://github.com/heavygee/hapi-monitor/commit/db89091ff7bbcc3a98ab233d4dbc52a9bf6e78fa))
+
 ## [Unreleased]
 
 ## [0.1.2] - 2026-06-08

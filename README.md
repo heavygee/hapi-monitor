@@ -133,8 +133,10 @@ on the same agent across re-sorts when statuses change.
 | `●` | `OK` | active, not thinking, runner PID alive |
 | `◆` | `WORKING` | active, thinking less than `HAPI_STUCK_MINUTES` (default 20) |
 | `▲` | `STUCK?` | thinking too long OR hub says active but PIDs missing |
-| `☠` | `ZOMBIE` | active but no runner / agent process |
+| `☠` | `ZOMBIE` | active on THIS machine but no runner / agent process found in local `ps` |
 | `○` | `INACTIVE` | disconnected; hidden by default, toggle with `i` |
+
+**Multi-machine note:** the `ZOMBIE` check is only applied to sessions whose `machineId` matches this monitor's host. Sessions on other machines (a Windows install, a second Linux box) are classified purely from the hub's `active` / `thinking` flags - we have no way to introspect their `/proc`. Detection is automatic: the monitor learns its own `machineId` by matching session `hostPid` values against local PIDs of agent-shaped processes.
 
 ## Environment variables
 

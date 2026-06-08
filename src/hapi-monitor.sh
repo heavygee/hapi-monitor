@@ -1863,15 +1863,28 @@ def render_ok_row(r):
         f'{mk_cell(pid, W_PID)}'
     )
 
-def classify(active, thinking, thinking_at, updated_at, host_pid, agent_id, lifecycle):
-    needles = [str(host_pid) if host_pid else '', agent_id or '']
-    procs = find_pids(needles)
-    runner = [p for p in procs if 'hapi' in p['cmd'].lower() and (not agent_id or agent_id[:8] in p['cmd'])]
-    agent = [p for p in procs if 'agent' in p['cmd'].lower() or 'claude' in p['cmd'].lower() or 'codex' in p['cmd'].lower()]
-    if agent_id:
-        agent = [p for p in procs if agent_id[:8] in p['cmd']] or agent
+def classify(active, thinking, thinking_at, updated_at, host_pid, agent_id, lifecycle, is_local=True):
+    """Classify one session.
 
-    alive = bool(runner or agent or (host_pid and any(p['pid'] == int(host_pid) for p in procs if host_pid)))
+    is_local=False means the session lives on a different machine than where
+    this monitor runs. We can't introspect remote /proc, so we skip the PID
+    aliveness check entirely and trust the hub's `active` flag. Remote
+    sessions are eligible for OK / WORKING / STUCK? / INACTIVE based on hub
+    timing; they CANNOT be classified ZOMBIE (we have no evidence either
+    way). See #25 - pre-fix, remote sessions were auto-ZOMBIE the moment
+    they went active because find_pids() only sees this box's /proc.
+    """
+    procs = []
+    if is_local:
+        needles = [str(host_pid) if host_pid else '', agent_id or '']
+        procs = find_pids(needles)
+        runner = [p for p in procs if 'hapi' in p['cmd'].lower() and (not agent_id or agent_id[:8] in p['cmd'])]
+        agent = [p for p in procs if 'agent' in p['cmd'].lower() or 'claude' in p['cmd'].lower() or 'codex' in p['cmd'].lower()]
+        if agent_id:
+            agent = [p for p in procs if agent_id[:8] in p['cmd']] or agent
+        alive = bool(runner or agent or (host_pid and any(p['pid'] == int(host_pid) for p in procs if host_pid)))
+    else:
+        alive = True  # trust hub.active for remote-machine sessions
 
     if not active:
         return 'INACTIVE', 'hub inactive', procs
@@ -1890,6 +1903,50 @@ def classify(active, thinking, thinking_at, updated_at, host_pid, agent_id, life
         return 'WORKING', f'thinking {think_age}', procs
 
     return 'OK', 'idle, ready for input', procs
+
+
+# Cached local machineId; detected from evidence in gather_rows. Stays put
+# once detected - machine identity doesn't change within a watch session.
+_LOCAL_MACHINE_ID = [None]
+
+_AGENT_CMD_HINTS = ('hapi', 'happy', 'claude', 'codex', 'cursor')
+
+def _detect_local_machine_id(session_pairs):
+    """Find which machineId is THIS box by vote: any session whose hostPid is
+    a real local PID *and that local PID's cmdline looks agent-shaped* is, by
+    definition, running on this box. Most common machineId wins. Returns None
+    if no evidence (no agent processes here OR this box has no sessions);
+    callers should treat None as "all sessions remote" - safer than the old
+    "assume local" which produced false ZOMBIEs on multi-machine hubs (#25).
+
+    We filter PIDs by cmdline hint to avoid coincidence collisions - small
+    PID integers from a remote box can easily match unrelated local PIDs."""
+    if _LOCAL_MACHINE_ID[0]:
+        return _LOCAL_MACHINE_ID[0]
+    local_pids = set()
+    for line in ps_lines():
+        parts = line.split(None, 5)
+        if len(parts) >= 6 and parts[0].isdigit():
+            cmd_low = parts[5].lower()
+            if any(h in cmd_low for h in _AGENT_CMD_HINTS):
+                local_pids.add(int(parts[0]))
+    votes = {}
+    for item, detail in session_pairs:
+        meta = detail.get('metadata') or item.get('metadata') or {}
+        mid = meta.get('machineId') or item.get('machineId')
+        hp = meta.get('hostPid')
+        if not mid or not hp:
+            continue
+        try:
+            if int(hp) in local_pids:
+                votes[mid] = votes.get(mid, 0) + 1
+        except (TypeError, ValueError):
+            continue
+    if not votes:
+        return None
+    local_mid = max(votes, key=votes.get)
+    _LOCAL_MACHINE_ID[0] = local_mid
+    return local_mid
 
 from concurrent.futures import ThreadPoolExecutor
 
@@ -1931,6 +1988,14 @@ def gather_rows():
             session_pairs = list(_ex.map(_fetch_detail, sessions_raw))
     else:
         session_pairs = []
+    # Detect which machineId is THIS box so classify() can skip the local PID
+    # check for remote-resident sessions (Windows install, second Linux box,
+    # etc.). Without this, every remote session goes ZOMBIE the instant the
+    # hub reports it active (#25). Returns None if no evidence yet, in which
+    # case all sessions default to is_local=False (trust hub) - safer than
+    # the old "assume local for everyone" because false ZOMBIEs are more
+    # alarming than briefly-missed real ones.
+    local_mid = _detect_local_machine_id(session_pairs)
     out_rows = []
     for item, detail in session_pairs:
         sid = item['id']
@@ -1940,6 +2005,8 @@ def gather_rows():
         thinking_at = detail.get('thinkingAt') or item.get('thinkingAt') or 0
         updated_at = detail.get('updatedAt') or item.get('updatedAt') or 0
         recency_at = max(int(thinking_at or 0), int(updated_at or 0))
+        machine_id = meta.get('machineId') or item.get('machineId')
+        is_local = bool(local_mid) and machine_id == local_mid
         status, note, procs = classify(
             bool(item.get('active')),
             bool(item.get('thinking')),
@@ -1948,6 +2015,7 @@ def gather_rows():
             host_pid,
             agent_id,
             meta.get('lifecycleState'),
+            is_local=is_local,
         )
         # INACTIVE always retained so the total count + chart stay honest;
         # display filter happens later via the `show_inactive` toggle.

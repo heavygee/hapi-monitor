@@ -170,9 +170,20 @@ else
 fi
 rm -f "$overlap_color"
 
+# Bug #28: cursor sessions still on the legacy stream-json protocol must
+# render with a visibly different badge (lowercase 'cursor' in plain mode)
+# AND their note must include the '[legacy stream-json]' marker so
+# operators can spot legacy holdouts during the ACP rollout.
+assert "#28  legacy cursor badge renders lowercase in plain mode" \
+  grep -qE '◆[[:space:]]+cursor[[:space:]]+oldsk00l' "$SNAP_DIR/cursor-acp-mix.txt"
+assert "#28  legacy cursor note carries '[legacy stream-json]' marker" \
+  grep -qF '[legacy stream-json]' "$SNAP_DIR/cursor-acp-mix.txt"
+assert "#28  ACP cursor badge keeps uppercase CURSOR" \
+  grep -qE '◆[[:space:]]+CURSOR[[:space:]]+modern' "$SNAP_DIR/cursor-acp-mix.txt"
+
 if [[ $assert_fail -ne 0 ]]; then
   echo "regress: at least one historic-bug assertion failed" >&2
   exit 1
 fi
 
-echo "regress: all 4 historic-bug assertions pass"
+echo "regress: all 7 historic-bug assertions pass"

@@ -182,6 +182,7 @@ Three sections, in priority order. All share the same column layout.
 | Column | Width | Means |
 |--------|-------|-------|
 | `S`    | 1     | status glyph: `◆`=WORKING, `●`=OK, `▲`=STUCK?, `☠`=ZOMBIE, `○`=INACTIVE |
+| `TYPE` | 8     | flavor badge: ` CURSOR `, ` CLAUDE `, ` CODEX  `. Cursor rows still on legacy stream-json (pre-ACP migration) render as ` cursor ` lowercase in dim gray, and their NOTE column carries `[legacy stream-json]` so operators can spot migration holdouts (#28). |
 | `TYPE` | 6     | agent flavor: `CURSOR`, `CLAUDE`, `CODEX`, `GEMINI`. Colored badge in interactive mode |
 | `PROJ` | 10    | last path segment of the project working dir, truncated with `…` |
 | `MODL` | 5     | model class indicator: `$sonn`=Claude Sonnet (premium), `$g5.5`=GPT-5 (premium), `$gemi`=Gemini Pro (premium), `?auto`=automatic/unknown selection, `?—`=no model reported |

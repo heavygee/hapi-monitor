@@ -61,6 +61,7 @@
       "lifecycle": "active",
       "hostPid": 4242,
       "agentSessionId": "agent-10101010",
+      "cursorSessionProtocol": "acp",
       "modelTier": "$",
       "modelLabel": "GPT-5",
       "note": null,

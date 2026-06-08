@@ -285,11 +285,25 @@ def status_badge(status, blink=False):
         return inner.strip()
     return f'{c256(fg, bg)}{t.B}{inner}{t.R}'
 
-def flavor_badge(flavor):
-    fg, bg = FLAVOR_STYLE.get(flavor, (252, 238))
-    inner = f' {flavor.upper():<6} '
+def flavor_badge(flavor, cursor_protocol=None):
+    """Render the 8-char fixed-width flavor cell.
+
+    For cursor sessions, ``cursor_protocol`` lets us visually distinguish
+    legacy stream-json sessions from ACP-migrated sessions during the HAPI
+    ACP rollout (#28). Width stays at 8 either way so column alignment
+    holds. Legacy uses lowercase ``cursor`` and dimmed colors; ACP keeps
+    the existing uppercase ``CURSOR`` badge. Non-cursor flavors ignore
+    the kwarg entirely."""
+    is_legacy_cursor = (flavor == 'cursor' and cursor_protocol != 'acp')
+    if is_legacy_cursor:
+        label = flavor  # lowercase 'cursor' signals legacy in plain mode too
+        fg, bg = (244, 235)  # dim gray on near-black - "deprecated"
+    else:
+        label = flavor.upper()
+        fg, bg = FLAVOR_STYLE.get(flavor, (252, 238))
+    inner = f' {label:<6} '
     if not T.use:
-        return flavor
+        return inner.strip()
     return f'{c256(fg, bg)}{t.B}{inner}{t.R}'
 
 def render_legend():
@@ -1083,7 +1097,7 @@ def render_compact_card_lines(r, width):
         meta = (
             f' {t.fg(245)}SID{t.R} {t.fg(87)}{r["sid8"]}{t.R}'
             f' {t.fg(245)}AG{t.R} {t.fg(213)}{aid}{t.R}'
-            f' {flavor_badge(r["flavor"])}'
+            f' {flavor_badge(r["flavor"], r.get("cursorSessionProtocol"))}'
             f' {t.fg(245)}pid{t.R} {t.fg(252)}{pid}{t.R}'
             f' {model_vis}'
         )
@@ -1218,9 +1232,13 @@ def render_table_row(r, selected=False):
     status_cell = f' {glyph} '
 
     # Type / flavor badge: 8 chars exactly (' CURSOR ' / ' CLAUDE ' / ' CODEX  ')
-    flavor_inner = f' {r["flavor"].upper():<6} '  # 1 + 6 + 1 = 8
+    # Legacy cursor sessions (#28) render as lowercase ' cursor ' in dim
+    # gray so the ACP rollout is visible at a glance.
+    is_legacy_cursor = (r['flavor'] == 'cursor' and r.get('cursorSessionProtocol') != 'acp')
+    flavor_label = r['flavor'] if is_legacy_cursor else r['flavor'].upper()
+    flavor_inner = f' {flavor_label:<6} '  # 1 + 6 + 1 = 8
     if T.use:
-        fg, bg = FLAVOR_STYLE.get(r['flavor'], (252, 238))
+        fg, bg = (244, 235) if is_legacy_cursor else FLAVOR_STYLE.get(r['flavor'], (252, 238))
         type_cell = f'{c256(fg, bg)}{t.B}{flavor_inner}{t.R}'
     else:
         type_cell = flavor_inner
@@ -1536,7 +1554,7 @@ def render_card(r):
     meta = (
         f' SID {t.fg(87)}{r["sid8"]}{t.R}'
         f'  AGENT {t.fg(213)}{aid}{t.R}'
-        f'  {flavor_badge(r["flavor"])}'
+        f'  {flavor_badge(r["flavor"], r.get("cursorSessionProtocol"))}'
         f'  PID {t.fg(252)}{r["hostPid"] or "—"}{t.R}'
         f'  MODEL {format_model_cell(r["modelTier"], r["modelLabel"])}'
     ) if T.use else f' SID {r["sid8"]}  AGENT {aid}  {r["flavor"]}  PID {r["hostPid"] or "—"}  MODEL {r["modelLabel"]}'
@@ -1846,7 +1864,7 @@ def format_model_cell(tier, label):
 
 def render_ok_row(r):
     dot = f'{t.fg(46)}●{t.R}' if T.use else '·'
-    fl = flavor_badge(r['flavor'])
+    fl = flavor_badge(r['flavor'], r.get('cursorSessionProtocol'))
     mvis = model_visible(r['modelTier'], r['modelLabel'])
     pid = f"pid {r['hostPid'] or '—'}"
     if T.use:
@@ -2005,6 +2023,19 @@ def _fetch_detail(item):
         return item, {}
 
 
+def _annotate_note(note, meta):
+    """Append protocol-migration markers to the per-row note. Today only
+    used for cursor sessions still on the legacy stream-json protocol
+    during the ACP rollout (#28). Centralised so future migrations
+    (codex protocol changes, etc.) have one place to extend."""
+    if (meta.get('flavor') == 'cursor'
+            and meta.get('cursorSessionProtocol') != 'acp'):
+        suffix = ' [legacy stream-json]'
+        if suffix not in note:
+            return f'{note}{suffix}'
+    return note
+
+
 _STATUS_ORDER = {'STUCK?': 0, 'ZOMBIE': 1, 'WORKING': 2, 'OK': 3, 'INACTIVE': 4}
 
 # Stable first-seen queue for attention rows. See gather_rows() for full
@@ -2084,9 +2115,10 @@ def gather_rows():
             'lifecycle': meta.get('lifecycleState'),
             'hostPid': host_pid,
             'agentSessionId': agent_id,
+            'cursorSessionProtocol': meta.get('cursorSessionProtocol'),
             'modelTier': tier,
             'modelLabel': label,
-            'note': note,
+            'note': _annotate_note(note, meta),
             'procs': procs[:2],
             'pending': item.get('pendingRequestsCount', 0),
             'recencyAt': recency_at,

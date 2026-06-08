@@ -1,0 +1,26 @@
+
+                                        BUILD + STATE  ┌ AGENTS ──────────────────────────────────┐                     
+  ██╗  ██╗   █████╗   ██████╗  ██╗      app 0.1.1  p1  cli 0.1.1  |   ┤ working 2                     peak 2 |          
+  ██║  ██║  ██╔══██╗  ██╔══██╗ ██║      git main@abc1234  |  2┤                                     ┌|                  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      hub active:1001  run active:1002  |   ┤                                     │|  
+  ██║  ██║  ██║  ██║  ██║  ██║ ██║      web abc1234@2026-06-02 17:00  sync  |   ┤                                     │|
+  ███████║  ███████║  ██████╔╝ ██║      hub1  running pid 2001 :8765  |  1┤                                    ─┘|      
+  ██╔══██║  ██╔══██║  ██╔═══╝  ██║      sessions 4   ◆WORKING 2 ●OK 2  |   ┤                                      |     
+  ██║  ██║  ██║  ██║  ██║      ██║        |  0┤                                      |                                  
+  ██║  ██║  ██║  ██║  ██║      ██║        |   ┤-15s     -10s          -5s         -0s|                                  
+  ╚═╝  ╚═╝  ╚═╝  ╚═╝  ╚═╝      ╚═╝        └──────────────────────────────────────────┘                                  
+ j/k ↑↓ select · TAB alert · g/G top/bot · i show inactive · q quit                                                     
+  ONLINE  hub http://hub.test  ·  2026-06-02 18:00:00  ·  stuck>20m                                                     
+════════════════════════════════════════════════════════════════════════════════════════════════════════════════════════
+
+ATTENTION REQUIRED (2)                                                                                                  
+   S  TYPE   PROJ       MODL  THINK    CPU    RAM    NOTE
+   ◆  CURSOR modern     ?auto YES 2m   —      —      thinking 2m                                                        
+   ◆  cursor oldsk00l   ?auto YES 4m   —      —      thinking 4m [legacy stream-json]                                   
+
+IDLE & READY (2)                                                                                                        
+   ●  CURSOR modern-id… ?g5   —        —      —      /home/dev/modern-idle                                              
+   ●  cursor legacy-id… ?g5   —        —      —      /home/dev/legacy-idle                                              
+
+OK  WORKING  STUCK?  ZOMBIE  |  $ prem  · eco  ? auto  |  --watch  --json  --plain                                      
+4 sessions · j/k to scroll · hub http://hub.test                                                                        

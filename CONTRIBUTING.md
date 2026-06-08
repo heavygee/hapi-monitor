@@ -89,10 +89,25 @@ notes are generated from these.
 
 ## Cutting a release
 
-Maintainers only. See [`NPM_SETUP.md`](NPM_SETUP.md) for the one-time
-npm environment wiring, then the tag procedure (bump
-`package.json`, append a dated `CHANGELOG.md` entry, push `vX.Y.Z`,
-watch the `release` workflow run).
+**Releases are automated** via [release-please](https://github.com/googleapis/release-please).
+You don't run `npm version` or `git tag` by hand.
+
+How it works:
+
+1. Land changes on `main` using [conventional commits](https://www.conventionalcommits.org/)
+   (PR titles, since we squash-merge: `fix: ...`, `feat: ...`, `feat!: ...` for breaking).
+2. release-please opens (or updates) a draft `chore(main): release X.Y.Z` PR with the
+   bumped `package.json` and an auto-generated `CHANGELOG.md` entry.
+3. Merge that release PR when you're ready to ship.
+4. release-please tags `vX.Y.Z` and creates the GitHub Release.
+5. The existing tag-triggered `release.yml` (OIDC trusted publishing) takes it
+   from there - publishes to npm and attaches the bundle to the GitHub Release.
+
+See [`NPM_SETUP.md`](NPM_SETUP.md) for the npm Trusted Publishing wiring (one-time setup).
+
+If you ever need to release manually (release-please is broken, urgent hotfix, etc.):
+bump `package.json`, append a dated `CHANGELOG.md` entry, push `vX.Y.Z` and the
+tag-triggered workflow still works.
 
 ## Reporting security issues
 

@@ -13,6 +13,15 @@ the workflow uses by default and what npm explicitly recommends for
 CI/CD. The legacy token path is documented as a breakglass fallback
 at the bottom.
 
+## Tagging is automated - don't run `npm version` by hand
+
+`release-please` (see `.github/workflows/release-please.yml`) consumes
+conventional commits on `main` and maintains a draft
+`chore(main): release X.Y.Z` PR with the version bump + changelog. Merge
+that PR when you want to ship. release-please then tags `vX.Y.Z`,
+which fires the workflow described in the rest of this doc. The only
+time you tag by hand is hotfix-on-a-broken-release-please.
+
 ## Pre-flight checks (do these first)
 
 | Check | Command | Pass condition |

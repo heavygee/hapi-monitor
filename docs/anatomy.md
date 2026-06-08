@@ -202,10 +202,16 @@ or `WORKING` states - anything you might need to look at.
    ◆  CURSOR hapi       ?auto YES 2s   9.0%   0.7%   ursor --resume d9c3d739-…
 ```
 
-- Sort order: `STUCK?` first, then `ZOMBIE`, then `WORKING`. Within
-  each status, oldest `thinkingAt` first so the longest-running
-  thought floats to the top.
+- Sort order: stable first-seen queue. The first time a session
+  enters any attention status it claims a slot and stays there until
+  it leaves the attention list entirely. A `WORKING` → `STUCK?`
+  transition keeps the row in place (the badge changes, position
+  doesn't) - this is deliberate, so multi-line marquee notes stay
+  readable as rows around them transition (#23).
 - This section is never paginated - all alerts are shown in full.
+- Sessions on remote machines (Windows install, second box) can
+  reach `WORKING` / `STUCK?` but never `ZOMBIE` - the local process
+  check doesn't apply to remote hosts (#25).
 
 ### IDLE & READY section
 

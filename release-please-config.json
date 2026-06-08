@@ -3,6 +3,7 @@
   "bootstrap-sha": "fd7bc34d7640a2f298a796fe3cf4675fbc678a9f",
   "release-type": "node",
   "include-v-in-tag": true,
+  "include-component-in-tag": false,
   "changelog-path": "CHANGELOG.md",
   "bump-minor-pre-major": true,
   "bump-patch-for-minor-pre-major": false,

@@ -1296,10 +1296,14 @@ def render_table_row(r, selected=False):
         else:
             note_src = r['note'] or ''
     else:
-        # Idle: show working directory so the operator can tell which clone /
-        # worktree this session is parked on. Project col is truncated to 10,
-        # NOTE has the full path.
-        note_src = (r['path'] or '').replace(str(Path.home()), '~') if r['path'] else ''
+        # Idle: prefer the HAPI session title (metadata.name) so multiple
+        # sessions in the same repo are distinguishable - working dir alone
+        # is ambiguous when, say, five agents live in ~/coding/hapi (#42).
+        # Fall back to the working directory when no title is set.
+        if r.get('title'):
+            note_src = r['title']
+        else:
+            note_src = (r['path'] or '').replace(str(Path.home()), '~') if r['path'] else ''
     note_text = marquee(note_src, note_w, sid_key + ':note') if note_src else ' ' * note_w
     if T.use:
         if st in ('STUCK?', 'ZOMBIE'):
@@ -2116,6 +2120,7 @@ def gather_rows():
             'hostPid': host_pid,
             'agentSessionId': agent_id,
             'cursorSessionProtocol': meta.get('cursorSessionProtocol'),
+            'title': (meta.get('name') or '').strip() or None,
             'modelTier': tier,
             'modelLabel': label,
             'note': _annotate_note(note, meta),

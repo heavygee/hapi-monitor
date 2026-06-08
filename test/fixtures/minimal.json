@@ -62,6 +62,7 @@
       "hostPid": 4242,
       "agentSessionId": "agent-10101010",
       "cursorSessionProtocol": "acp",
+      "title": null,
       "modelTier": "$",
       "modelLabel": "GPT-5",
       "note": null,

@@ -70,12 +70,16 @@ def row(
     lifecycle="active",
     procs=None,
     cursor_protocol=None,
+    title=None,
 ):
     """Build one row dict matching gather_rows() output schema.
 
     ``cursor_protocol``: only meaningful when flavor=='cursor'. Defaults
     to 'acp' for cursor rows (current world). Pass 'stream-json' (or any
     non-'acp' string) to render the legacy badge + note marker (#28).
+
+    ``title``: HAPI session title (metadata.name); when set, idle rows
+    show this instead of the path in the NOTE column (#42).
     """
     if path is None:
         path = f"/home/dev/{project}"
@@ -106,6 +110,7 @@ def row(
         "hostPid": host_pid,
         "agentSessionId": agent_id,
         "cursorSessionProtocol": cursor_protocol,
+        "title": title,
         "modelTier": model_tier,
         "modelLabel": model_label,
         "note": note,
@@ -242,7 +247,37 @@ FIXTURES["chart-overlap"] = {
 }
 
 
-# 6. cursor-acp-mix: side-by-side ACP-migrated and legacy stream-json
+# 6. session-titles: five sessions all in ~/coding/hapi, four with HAPI
+# titles set and one without. Direct regression for #42 - the four with
+# titles must render the title in the NOTE column, the fifth must fall
+# back to the path. Without this fix, all five looked identical.
+FIXTURES["session-titles"] = {
+    "now": NOW_ISO,
+    "now_epoch": NOW_EPOCH,
+    "show_inactive": False,
+    "cursor_sid": None,
+    "builds": BUILDS,
+    "chart": {"samples": [[0, 0]] * 4, "peak": 0},
+    "rows": [
+        row("OK", make_sid(0x80), flavor="cursor", project="hapi",
+            path="/home/dev/hapi", updated_min_ago=1,
+            title="upstream issue/pr discovery"),
+        row("OK", make_sid(0x81), flavor="cursor", project="hapi",
+            path="/home/dev/hapi", updated_min_ago=2,
+            title="legacy chat attachments (resurrected)"),
+        row("OK", make_sid(0x82), flavor="cursor", project="hapi",
+            path="/home/dev/hapi", updated_min_ago=3,
+            title="android watch"),
+        row("OK", make_sid(0x83), flavor="claude", project="hapi",
+            path="/home/dev/hapi", updated_min_ago=4,
+            title="Peer: #829 mermaid parse-failure"),
+        row("OK", make_sid(0x84), flavor="cursor", project="hapi",
+            path="/home/dev/hapi", updated_min_ago=5),
+    ],
+}
+
+
+# 7. cursor-acp-mix: side-by-side ACP-migrated and legacy stream-json
 # cursor sessions. Direct regression for #28 - the legacy session must
 # render as lowercase 'cursor' (dim badge) AND its note must include
 # '[legacy stream-json]'. ACP rows keep the uppercase CURSOR badge.

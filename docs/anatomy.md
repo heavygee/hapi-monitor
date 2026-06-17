@@ -265,7 +265,7 @@ Three groups separated by `│`:
 
 1. **Status legend** - the four state glyphs with their meanings.
 2. **Model class legend** - `$ premium` (paid premium model), `· economy` (free/cheap tier), `? auto` (model not reported / auto-routing).
-3. **Mode indicators** - which CLI flags are active. `◉ LIVE Ns` shows the live refresh interval in seconds (`HAPI_WATCH_SEC`).
+3. **Mode indicators** - which CLI flags are active. `◉ LIVE Ns` shows the current data-refresh interval (`HAPI_WATCH_SEC` when busy, `HAPI_WATCH_IDLE_SEC` when all idle).
 
 ### Σ summary line
 
@@ -299,7 +299,12 @@ Hotkeys are in the hint line. The relevant environment variables:
 
 | Env | Default | Effect |
 |-----|---------|--------|
-| `HAPI_WATCH_SEC`        | `15` | refresh interval in seconds (also the chart x-axis bucket size) |
+| `HAPI_WATCH_SEC`        | `1` | fast refresh when attention rows exist |
+| `HAPI_WATCH_IDLE_SEC`   | `5` | slow refresh when all agents idle |
+| `HAPI_ECO`              | `0` | `1` = throttle marquee (set by `--eco`) |
+| `HAPI_BUILD_CACHE_SEC`  | `30` | build-info cache TTL in `--watch` |
+| `HAPI_OK_DETAIL_TTL`    | `10` | OK-row session detail cache |
+| `HAPI_INACTIVE_DETAIL_TTL` | `30` | INACTIVE detail cache when shown |
 | `HAPI_HEALTH_HUB`       | -    | hub URL (or use `--hub`) |
 | `HAPI_HEALTH_STUCK_MIN` | `20` | threshold (minutes) for `STUCK?` flag |
 | `HAPI_HEALTH_IDLE_MAX`  | auto | cap on visible idle rows (default: fit viewport) |

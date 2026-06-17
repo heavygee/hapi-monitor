@@ -3,6 +3,17 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [Unreleased]
+
+### Performance
+- **`--watch` CPU/API load reduced for always-on tmux panes (#44).**
+  Adaptive refresh: 1s when WORKING/STUCK/ZOMBIE rows exist, 5s when all
+  idle. Session detail fetch tiered (attention every tick, OK 10s TTL,
+  hidden INACTIVE skipped). Build-info cached 30s. Marquee repaints
+  throttled when idle or with `--eco`. New flags: `--eco`, `--interval
+  SEC`. Env: `HAPI_WATCH_IDLE_SEC`, `HAPI_BUILD_CACHE_SEC`,
+  `HAPI_OK_DETAIL_TTL`, `HAPI_INACTIVE_DETAIL_TTL`.
+
 ## [0.2.0](https://github.com/heavygee/hapi-monitor/compare/v0.1.3...v0.2.0) (2026-06-08)
 
 

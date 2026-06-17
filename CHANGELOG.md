@@ -3,6 +3,13 @@
 All notable changes follow [Keep a Changelog](https://keepachangelog.com/en/1.1.0/)
 and this project adheres to [Semantic Versioning](https://semver.org/).
 
+## [0.2.1](https://github.com/heavygee/hapi-monitor/compare/v0.2.0...v0.2.1) (2026-06-17)
+
+
+### Performance Improvements
+
+* **watch:** adaptive refresh, detail/build caches, --eco for tmux panes ([#44](https://github.com/heavygee/hapi-monitor/issues/44)) ([#45](https://github.com/heavygee/hapi-monitor/issues/45)) ([b90a0f6](https://github.com/heavygee/hapi-monitor/commit/b90a0f6d79a920abb8b21f80de360a76bb47a4fa))
+
 ## [Unreleased]
 
 ### Performance

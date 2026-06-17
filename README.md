@@ -105,7 +105,8 @@ HAPI_JWT="eyJ..." hapi-monitor
 
 ```bash
 hapi-monitor              # one-shot snapshot
-hapi-monitor --watch      # live updating, 1s refresh (default)
+hapi-monitor --watch      # live updating (1s when busy, 5s all-idle)
+hapi-monitor --watch --eco   # tmux pane: 5s refresh, low CPU
 hapi-monitor --all        # include INACTIVE (disconnected) sessions
 hapi-monitor --json       # machine-readable dump
 hapi-monitor --plain      # no ANSI; pipe-friendly
@@ -125,6 +126,28 @@ hapi-monitor jellybot     # filter by substring (path / flavor / id)
 
 The cursor is **sticky-by-agent** (session ID), not row index, so it stays
 on the same agent across re-sorts when statuses change.
+
+## Resource usage (always-on tmux panes)
+
+`--watch` is live by design, but an always-on pane on a hub with 100+
+sessions can cost ~10% CPU at 1 Hz with a detail-fetch per session. The
+monitor now throttles itself:
+
+- **Adaptive refresh** - 1s when WORKING/STUCK/ZOMBIE exist, **5s when all
+  idle** (footer shows `◉ LIVE 5s` in slow mode).
+- **Session detail cache** - OK rows every 10s; hidden INACTIVE skip detail.
+- **Build-info cache** - header git/systemd probes cached 30s.
+- **No marquee spam when idle** - 2 Hz note scrolling only when attention
+  rows exist.
+
+For a side pane you rarely stare at:
+
+```bash
+hapi-monitor --watch --eco          # 5s refresh, lowest CPU
+hapi-monitor --watch --interval 10  # even lazier
+```
+
+Close it: `q` in the pane, or `pkill -f 'hapi-monitor --watch'`.
 
 ## Status meanings
 
@@ -155,7 +178,12 @@ If all three fail (no env, no settings file, no live local agent visible) every 
 | `HAPI_LOCAL_MACHINE_ID` | (auto-detect) | Override the detected local `machineId`. Sessions whose `machineId` differs are classified from hub flags only (no local PID check / no false ZOMBIE). |
 | `HAPI_REPO` | `~/coding/hapi/active` (falls back to legacy `~/coding/hapi-active` then `~/coding/hapi`) | Repo root for build identifiers in the header. |
 | `HAPI_STUCK_MINUTES` | `20` | Thinking longer than this → `STUCK?`. |
-| `HAPI_WATCH_SEC` | `1` | Refresh interval for `--watch` (fractions ok). |
+| `HAPI_WATCH_SEC` | `1` | Fast refresh when WORKING/STUCK/ZOMBIE rows exist. |
+| `HAPI_WATCH_IDLE_SEC` | `5` | Slow refresh when every visible agent is idle. |
+| `HAPI_ECO` | `0` | Set by `--eco`; throttles marquee repaints. |
+| `HAPI_BUILD_CACHE_SEC` | `30` | Header build-info cache TTL in `--watch`. |
+| `HAPI_OK_DETAIL_TTL` | `10` | OK-row session detail cache (seconds). |
+| `HAPI_INACTIVE_DETAIL_TTL` | `30` | INACTIVE detail cache when shown (seconds). |
 | `HAPI_CHART_STATE` | `$TMPDIR/...` | Sparkline history file (watch mode). |
 | `HAPI_SESSIONS_PLOT` | `src/plotter/hapi-sessions-plot` | Native plotter binary path. |
 | `HAPI_HEALTH_IDLE_MAX` | (fit terminal) | Cap idle rows. |

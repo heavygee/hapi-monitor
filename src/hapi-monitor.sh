@@ -6,7 +6,8 @@
 #   hapi-monitor                # all sessions
 #   hapi-monitor jellybot       # filter path/flavor/id substring
 #   hapi-monitor --json
-#   hapi-monitor --watch        # refresh every 1s (HAPI_WATCH_SEC to tune)
+#   hapi-monitor --watch        # refresh (default 1s active / 5s all-idle)
+#   hapi-monitor --watch --eco  # tmux-friendly: 5s, no marquee spam
 #
 # Trust model:
 #   OK       active, not thinking, runner PID alive
@@ -45,6 +46,8 @@ STUCK_MIN="${HAPI_STUCK_MINUTES:-20}"
 JSON=0
 WATCH=0
 WATCH_SEC="${HAPI_WATCH_SEC:-1}"
+WATCH_IDLE_SEC="${HAPI_WATCH_IDLE_SEC:-5}"
+ECO=0
 FILTER=""
 ALL=0
 BACKUPS=0
@@ -58,6 +61,11 @@ Usage: hapi-monitor [--json] [--watch] [--all] [--backups] [--plain] [filter]
   --backups  append borg / system-backup process snapshot (local machine)
   --plain    no ANSI colors (also respects NO_COLOR=1)
   --watch    in-place refresh (alternate screen, no full clear flash)
+             Active when WORKING/STUCK/ZOMBIE present (default 1s); slows to
+             5s when every visible agent is idle. Use --eco for tmux panes.
+  --eco      shorthand for --watch --interval 5 with marquee throttled
+  --interval SEC
+             set both active and idle refresh to SEC seconds (--watch only)
   --all      show INACTIVE (disconnected) agents on launch.
              Default hides them but they remain in the total count.
              Press 'i' in --watch to toggle visibility live.
@@ -76,7 +84,12 @@ Environment:
                         skips the ZOMBIE PID-check for any session NOT on this machineId)
   HAPI_REPO             repo root for build identifiers (default: ~/coding/hapi/active, falls back to ~/coding/hapi-active/~/coding/hapi)
   HAPI_STUCK_MINUTES    thinking longer than this → STUCK? (default 20)
-  HAPI_WATCH_SEC        refresh interval for --watch (default 1; supports fractions e.g. 0.5)
+  HAPI_WATCH_SEC        fast refresh when attention rows exist (default 1)
+  HAPI_WATCH_IDLE_SEC   slow refresh when all agents idle (default 5)
+  HAPI_ECO              1 = throttle marquee repaints (set by --eco)
+  HAPI_BUILD_CACHE_SEC  build-info cache TTL in --watch (default 30)
+  HAPI_OK_DETAIL_TTL    OK-row session detail cache (default 10)
+  HAPI_INACTIVE_DETAIL_TTL  INACTIVE detail cache when shown (default 30)
   HAPI_CHART_STATE      sparkline history file (--watch; default $TMPDIR/hapi-monitor-chart.$$)
   HAPI_SESSIONS_PLOT    native chart binary (default: src/plotter/hapi-sessions-plot; auto-built if cc present)
   HAPI_HEALTH_LEGACY_CARDS  1 = old 7-line bordered cards for WORKING/STUCK/ZOMBIE
@@ -91,6 +104,12 @@ while [[ $# -gt 0 ]]; do
   case "$1" in
     --json) JSON=1; shift ;;
     --watch) WATCH=1; shift ;;
+    --eco) WATCH=1; ECO=1; WATCH_SEC=5; WATCH_IDLE_SEC=5; shift ;;
+    --interval|--refresh)
+      WATCH_SEC="$2"
+      WATCH_IDLE_SEC="$2"
+      shift 2
+      ;;
     --all) ALL=1; shift ;;
     --backups) BACKUPS=1; shift ;;
     --plain) PLAIN=1; shift ;;
@@ -231,6 +250,9 @@ hub_public = _detect_hub_public(hub)
 term_w = shutil.get_terminal_size((100, 40)).columns
 watch_mode = os.environ.get('HAPI_WATCH') == '1'
 watch_redraw = os.environ.get('HAPI_WATCH_REDRAW') == '1'
+_EFFECTIVE_TICK = [1.0]  # current data-refresh interval; render_legend reads this
+_BUILD_CACHE = {'at': 0.0, 'data': None}
+_DETAIL_CACHE = {}  # sid -> {'at': float, 'detail': dict}
 
 W = max(72, min(term_w, 120))
 
@@ -306,12 +328,18 @@ def flavor_badge(flavor, cursor_protocol=None):
         return inner.strip()
     return f'{c256(fg, bg)}{t.B}{inner}{t.R}'
 
+def _live_interval_label():
+    sec = _EFFECTIVE_TICK[0]
+    if sec == int(sec):
+        return f'{int(sec)}s'
+    return f'{sec:g}s'
+
 def render_legend():
     """Footer key — same colored badges as the main board."""
     if not T.use:
         bits = ['OK', 'WORKING', 'STUCK?', 'ZOMBIE', '|', '$ prem', '· eco', '? auto', '|', '--watch', '--json', '--plain']
         if watch_mode:
-            bits += ['LIVE', f'{os.environ.get("HAPI_WATCH_SEC", "15")}s']
+            bits += ['LIVE', _live_interval_label()]
         return '  '.join(bits)
     parts = [
         status_badge('OK'),
@@ -328,7 +356,7 @@ def render_legend():
         f'{t.fg(245)}--plain{t.R}',
     ]
     if watch_mode:
-        parts.append(f'{t.fg(51)}{t.B}◉ LIVE{t.R} {t.fg(245)}{os.environ.get("HAPI_WATCH_SEC", "15")}s{t.R}')
+        parts.append(f'{t.fg(51)}{t.B}◉ LIVE{t.R} {t.fg(245)}{_live_interval_label()}{t.R}')
     return '  '.join(parts)
 
 def render_list_hint(n_rows, all_rows=None, hidden_inactive=0):
@@ -1735,6 +1763,23 @@ def collect_build_info():
         'machines': machines,
     }
 
+def collect_build_info_live():
+    """Build header metadata. Cached in --watch so marquee repaints don't
+    re-run git/systemd/API every 0.5s (#44)."""
+    if not watch_mode:
+        return collect_build_info()
+    try:
+        ttl = float(os.environ.get('HAPI_BUILD_CACHE_SEC', '30'))
+    except ValueError:
+        ttl = 30.0
+    now = time.time()
+    if _BUILD_CACHE['data'] is not None and (now - _BUILD_CACHE['at']) < ttl:
+        return _BUILD_CACHE['data']
+    data = collect_build_info()
+    _BUILD_CACHE['at'] = now
+    _BUILD_CACHE['data'] = data
+    return data
+
 def get(url, auth=True):
     """Hub API call. Raises HubUnavailable for any failure mode; never crashes
     on a transient connection blip. Auto-retries once after refreshing the JWT
@@ -2027,6 +2072,59 @@ def _fetch_detail(item):
         return item, {}
 
 
+def _detail_ttl(item):
+    """Seconds to cache session detail. None = skip fetch entirely."""
+    if not item.get('active'):
+        if not show_inactive:
+            return None
+        try:
+            return float(os.environ.get('HAPI_INACTIVE_DETAIL_TTL', '30'))
+        except ValueError:
+            return 30.0
+    if item.get('thinking'):
+        return 0.0
+    try:
+        return float(os.environ.get('HAPI_OK_DETAIL_TTL', '10'))
+    except ValueError:
+        return 10.0
+
+
+def _fetch_detail_cached(item):
+    sid = item['id']
+    ttl = _detail_ttl(item)
+    if ttl is None:
+        return item, {}
+    now = time.time()
+    if ttl > 0:
+        cached = _DETAIL_CACHE.get(sid)
+        if cached and (now - cached['at']) < ttl:
+            return item, cached['detail']
+    item2, detail = _fetch_detail(item)
+    _DETAIL_CACHE[sid] = {'at': now, 'detail': detail}
+    return item2, detail
+
+
+def effective_watch_tick(rows):
+    """Adaptive refresh: fast when someone is WORKING/STUCK/ZOMBIE, slow idle."""
+    try:
+        fast = float(os.environ.get('HAPI_WATCH_SEC', '1'))
+    except ValueError:
+        fast = 1.0
+    idle_raw = os.environ.get('HAPI_WATCH_IDLE_SEC')
+    if idle_raw is None:
+        idle = 5.0 if fast <= 1.0 else fast
+    else:
+        try:
+            idle = float(idle_raw)
+        except ValueError:
+            idle = 5.0
+    if not rows:
+        return idle
+    if any(r['status'] in ('WORKING', 'STUCK?', 'ZOMBIE') for r in rows):
+        return fast
+    return idle
+
+
 def _annotate_note(note, meta):
     """Append protocol-migration markers to the per-row note. Today only
     used for cursor sessions still on the legacy stream-json protocol
@@ -2073,7 +2171,7 @@ def gather_rows():
         sessions_raw = [s for s in sessions_raw if filt in json.dumps(s).lower()]
     if sessions_raw:
         with ThreadPoolExecutor(max_workers=min(16, len(sessions_raw))) as _ex:
-            session_pairs = list(_ex.map(_fetch_detail, sessions_raw))
+            session_pairs = list(_ex.map(_fetch_detail_cached, sessions_raw))
     else:
         session_pairs = []
     # Re-attempt detection with detail-enriched rows in case the summary
@@ -2155,6 +2253,10 @@ def gather_rows():
             return (1, _attn_queue_position(r['sid']))
         return (status_rank, r['project'], r['flavor'], r['sid'])
     out_rows.sort(key=_sort_key)
+    live_sids = {item['id'] for item in sessions_raw}
+    for sid in list(_DETAIL_CACHE):
+        if sid not in live_sids:
+            del _DETAIL_CACHE[sid]
     return out_rows
 
 
@@ -2249,7 +2351,7 @@ def build_frame(rows, cursor_sid=None):
     selected_row = next((r for r in visible if r['sid'] == cursor_sid), None) if cursor_sid else None
 
     out = []
-    builds = collect_build_info()
+    builds = collect_build_info_live()
     out.append(render_header(now_str, builds, rows, selected_row=selected_row))
 
     if os.environ.get('HAPI_HEALTH_LEGACY_CARDS') == '1':
@@ -2337,6 +2439,7 @@ def watch_loop():
             tick = float(os.environ.get('HAPI_WATCH_SEC', '1'))
         except ValueError:
             tick = 1.0
+        _EFFECTIVE_TICK[0] = tick
 
         # Cursor sticks to the *agent* (sid), not the row index — the table
         # reorders as agents start/stop thinking. None = nothing selected.
@@ -2357,6 +2460,8 @@ def watch_loop():
         error_attempt = 0
         while True:
             now = time.time()
+            tick = effective_watch_tick(rows)
+            _EFFECTIVE_TICK[0] = tick
             need_data = (now - last_data_at) >= tick or not rows
             if need_data:
                 try:
@@ -2393,7 +2498,12 @@ def watch_loop():
 
             # Sleep with keyboard polling (re-render on every key or marquee step).
             frame_deadline = last_data_at + tick
-            marquee_step = max(0.1, 1.0 / max(1, SCROLL_CHARS_PER_SEC))  # repaint at scroll rate
+            has_attention = any(r['status'] in ('WORKING', 'STUCK?', 'ZOMBIE') for r in rows)
+            if os.environ.get('HAPI_ECO') == '1' or not has_attention:
+                # All-idle or --eco: no 2Hz marquee repaints (#44).
+                marquee_step = tick
+            else:
+                marquee_step = max(0.1, 1.0 / max(1, SCROLL_CHARS_PER_SEC))
             next_paint = time.time() + marquee_step
             while True:
                 now = time.time()
@@ -2563,6 +2673,8 @@ if [[ "$WATCH" -eq 1 ]]; then
   export FORCE_COLOR=1
   export HAPI_WATCH=1
   export HAPI_WATCH_SEC="$WATCH_SEC"
+  export HAPI_WATCH_IDLE_SEC="$WATCH_IDLE_SEC"
+  export HAPI_ECO="$ECO"
   export HAPI_CHART_STATE="${HAPI_CHART_STATE:-${TMPDIR:-/tmp}/hapi-monitor-chart.$$}"
   cleanup_watch() {
     rm -f "${HAPI_CHART_STATE:-}"
